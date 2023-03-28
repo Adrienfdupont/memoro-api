@@ -1,5 +1,5 @@
 import express from "express";
-import mariadb, { Connection, SqlError } from "mariadb";
+import mariadb, { Connection, SqlError, version } from "mariadb";
 import bodyParser from "body-parser";
 import bcrypt, { hash } from "bcrypt";
 
@@ -13,12 +13,12 @@ const pool = mariadb.createPool({
   connectionLimit: 5,
 });
 
-let connection: Connection | undefined = undefined;
-
 app.use(bodyParser.json());
 
 
 app.post("/api/user", async (req, res) => {
+  let connection: Connection | undefined = undefined;
+  let msgContent: String = "";
   try {
     connection = await pool.getConnection();
     const saltRounds = 10;
@@ -27,41 +27,53 @@ app.post("/api/user", async (req, res) => {
       "INSERT INTO users(name, password) VALUES(?, ?)",
       [req.body.username, hash]
     );
-    res.send({
-      message: "Vous avez bien été inscrit."
-    });
+    msgContent = "Vous avez bien été inscrit.";
   } catch (err) {
     res.status(500);
     if (err instanceof SqlError){
       if (err.errno === 1062){
-        res.send({
-          "message": "Ce nom est déjà utilisé."
-        })
+        msgContent = "Ce nom est déjà utilisé.";
       }
     }
   }
-  res.send();
+  res.send({
+    message: msgContent
+  });
   connection?.end();
 });
 
 
 app.post("/api/login", async (req, res) => {
+  let connection: Connection | undefined = undefined;
+  let msgContent: String = "";
   try {
     connection = await pool.getConnection();
     const response = await connection.query(
       "SELECT * FROM users WHERE name = ?",
       [req.body.username]
     );
-    res.send(response);
+    
+    if (response.length > 0){
+      const verify = await bcrypt.compare(req.body.password, response[0].password);
+      if (verify){
+        msgContent = "Connecté";
+      } else {
+        msgContent = "Nom d'utilisateur ou mot de passe incorrect.";
+      }
+    } else {
+      msgContent = "Nom d'utilisateur ou mot de passe incorrect.";
+    }
   } catch (err) {
     res.status(500);
-    console.log(err);
-    res.send({
-      message: "erreur"
-    });
   }
-  res.send();
+  res.send({
+    message: msgContent
+  });
   connection?.end();
 });
 
 app.listen(3000, () => console.log("Serveur démarré"));
+
+function generateToken(name: String){
+  
+}
