@@ -15,10 +15,11 @@ const pool = mariadb.createPool({
 
 app.use(bodyParser.json());
 
+let connection: Connection | undefined = undefined;
+let msgContent: String = "";
+
 
 app.post("/api/user", async (req, res) => {
-  let connection: Connection | undefined = undefined;
-  let msgContent: String = "";
   try {
     connection = await pool.getConnection();
     const saltRounds = 10;
@@ -28,6 +29,7 @@ app.post("/api/user", async (req, res) => {
       [req.body.username, hash]
     );
     msgContent = "Vous avez bien été inscrit.";
+
   } catch (err) {
     res.status(500);
     if (err instanceof SqlError){
@@ -44,25 +46,20 @@ app.post("/api/user", async (req, res) => {
 
 
 app.post("/api/login", async (req, res) => {
-  let connection: Connection | undefined = undefined;
-  let msgContent: String = "";
   try {
     connection = await pool.getConnection();
     const response = await connection.query(
       "SELECT * FROM users WHERE name = ?",
       [req.body.username]
     );
-    
-    if (response.length > 0){
-      const verify = await bcrypt.compare(req.body.password, response[0].password);
-      if (verify){
-        msgContent = "Connecté";
-      } else {
-        msgContent = "Nom d'utilisateur ou mot de passe incorrect.";
-      }
+
+    if (response.length > 0 && await bcrypt.compare(req.body.password, response[0].password)){
+      msgContent = "Connecté";
+      generateToken(response[0].name);
     } else {
-      msgContent = "Nom d'utilisateur ou mot de passe incorrect.";
+      msgContent = "Nom d'utilisateur ou mot de passe incorrect."
     }
+
   } catch (err) {
     res.status(500);
   }
@@ -74,6 +71,7 @@ app.post("/api/login", async (req, res) => {
 
 app.listen(3000, () => console.log("Serveur démarré"));
 
+
 function generateToken(name: String){
-  
+  console.log(name);
 }
