@@ -2,18 +2,18 @@ import express from "express";
 import mariadb, { Connection, SqlError, version } from "mariadb";
 import bodyParser from "body-parser";
 import bcrypt, { hash } from "bcrypt";
+import dotenv from 'dotenv';
 
 const app = express();
+app.use(bodyParser.json());
+dotenv.config();
 
 const pool = mariadb.createPool({
-  host: process.env.DB_HOST ?? "localhost",
-  user: "root",
-  password: "root",
-  database: "easy-learn",
-  connectionLimit: 5,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
 });
-
-app.use(bodyParser.json());
 
 let connection: Connection | undefined = undefined;
 let msgContent: String = "";
