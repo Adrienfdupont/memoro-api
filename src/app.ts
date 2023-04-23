@@ -3,6 +3,7 @@ import mariadb, { Connection, SqlError, version } from "mariadb";
 import bodyParser from "body-parser";
 import bcrypt, { hash } from "bcrypt";
 import dotenv from 'dotenv';
+import generateToken from './utils';
 
 const app = express();
 app.use(bodyParser.json());
@@ -70,8 +71,3 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.listen(3000, () => console.log("Serveur démarré"));
-
-
-function generateToken(name: String){
-  console.log(name);
-}
