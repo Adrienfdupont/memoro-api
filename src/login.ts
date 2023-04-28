@@ -1,26 +1,23 @@
-import { Request } from "express";
+import { Request, response } from "express";
 import { Response } from "express-serve-static-core";
-import { Connection, Pool } from "mariadb";
 import bcrypt from "bcrypt";
+import ConnectionHelper from "./helper/ConnectionHelper";
 
 export default async function login(
-  pool: Pool,
   req: Request,
   res: Response
 ): Promise<void> {
-  let connection: Connection | undefined = undefined;
   let msgContent: string = "";
 
   try {
-    connection = await pool.getConnection();
-    const response = await connection.query(
-      "SELECT * FROM users WHERE name = ?",
-      [req.body.username]
-    );
+    const sql = "SELECT * FROM users WHERE name = ?";
+    const placeholder = [req.body.username];
+
+    const result: any[] = await ConnectionHelper.performQuery(sql, placeholder);
 
     if (
-      response.length > 0 &&
-      (await bcrypt.compare(req.body.password, response[0].password))
+      result.length > 0 &&
+      (await bcrypt.compare(req.body.password, result[0].password))
     ) {
       msgContent = "Connecté";
     } else {
@@ -32,5 +29,4 @@ export default async function login(
   res.send({
     message: msgContent,
   });
-  connection?.end();
 }
