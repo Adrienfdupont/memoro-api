@@ -7,7 +7,7 @@ export default class SecurityHelper
   {
     // generate the header
     const header = JSON.stringify({
-      alg: "RS256",
+      alg: "RSA-SHA256",
       typ: "AWT",
     });
 
@@ -38,9 +38,20 @@ export default class SecurityHelper
 
   static verifyToken(token: string): boolean
   {
-    const [header, payload, signature] = token.split(".");
-    console.log(header);
+    // fetch token elements
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
+    const header = JSON.parse(Buffer.from(encodedHeader, "base64").toString("utf-8"));
+    const payload = JSON.parse(Buffer.from(encodedPayload, "base64").toString("utf-8"));
 
-    return true;
+    // Get the public key
+    const publicKeyContent = fs.readFileSync("keys/publickey.pem").toString();
+    const publicKey = crypto.createPublicKey(publicKeyContent);
+
+    // Verify the signature
+    const verifier = crypto.createVerify("RSA-SHA256");
+    verifier.write(Buffer.from(encodedPayload, "base64").toString("utf-8"));
+    verifier.end();
+
+    return verifier.verify(publicKey, encodedSignature, "base64");
   }
 }
