@@ -3,8 +3,7 @@ import crypto from "crypto";
 
 export default class SecurityHelper
 {
-  static generateToken(username: string): string
-  {
+  static generateToken(username: string): string {
     // generate the header
     const header = JSON.stringify({
       alg: "RSA-SHA256",
@@ -36,12 +35,25 @@ export default class SecurityHelper
     return token;
   }
 
-  static verifyToken(token: string): boolean
-  {
+  static verifyToken(token: string): boolean {
+    if (token.split(".").length !== 3) {
+      return false;
+    }
     // fetch token elements
     const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
-    const header = JSON.parse(Buffer.from(encodedHeader, "base64").toString("utf-8"));
-    const payload = JSON.parse(Buffer.from(encodedPayload, "base64").toString("utf-8"));
+
+    // verify token type and expiration date
+    const header = JSON.parse(
+      Buffer.from(encodedHeader, "base64").toString("utf-8")
+    );
+    const stringPayload = Buffer.from(encodedPayload, "base64").toString(
+      "utf-8"
+    );
+    const payload = JSON.parse(stringPayload);
+    
+    if (header.typ !== "AWT" || new Date(payload["expiration date"]) < new Date()) {
+      return false;
+    }
 
     // Get the public key
     const publicKeyContent = fs.readFileSync("keys/publickey.pem").toString();
@@ -49,9 +61,10 @@ export default class SecurityHelper
 
     // Verify the signature
     const verifier = crypto.createVerify("RSA-SHA256");
-    verifier.write(Buffer.from(encodedPayload, "base64").toString("utf-8"));
+    verifier.write(stringPayload);
     verifier.end();
 
-    return verifier.verify(publicKey, encodedSignature, "base64");
+    const verified = verifier.verify(publicKey, encodedSignature, "base64");
+    return verified;
   }
 }
