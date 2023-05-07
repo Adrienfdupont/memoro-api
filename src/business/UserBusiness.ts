@@ -3,7 +3,6 @@ import { SqlError } from "mariadb";
 import bcrypt from "bcrypt";
 import SecurityHelper from "../helper/SecurityHelper";
 import LoginResponse from "../types/LoginResponse";
-import RegisterResponse from "../types/RegisterReponse";
 
 export default class UserBusiness
 {
@@ -13,7 +12,8 @@ export default class UserBusiness
       status: 500,
       body: {
         token: "",
-        message: "Une erreur est survenue",
+        success: "",
+        error: "",
       },
     };
     try {
@@ -27,26 +27,26 @@ export default class UserBusiness
         // password matches username
         loginResponse.status = 200;
         loginResponse.body.token = SecurityHelper.generateToken(inputUsername);
-        loginResponse.body.message = "Authentification réussie.";
+        loginResponse.body.success = "Authentification réussie.";
       } else {
         // authentication failed
         loginResponse.status = 403;
-        loginResponse.body.message = "Nom d'utilisateur ou mot de passe incorrect.";
+        loginResponse.body.success = "Nom d'utilisateur ou mot de passe incorrect.";
       }
     } catch (err) {
-      // query failed
-      loginResponse.status = 500;
+      loginResponse.body.error = "Une erreur est survenue";
     }
     return loginResponse;
   }
 
-  static async register(inputUsername: string, inputPassword: string): Promise<RegisterResponse>
+  static async register(inputUsername: string, inputPassword: string): Promise<LoginResponse>
   {
-    const registerResponse: RegisterResponse = {
+    const loginResponse: LoginResponse = {
       status: 500,
       body: {
-        message: "Une erreur est survenue",
         token: "",
+        success: "",
+        error: "",
       },
     };
     // hash the input password
@@ -60,18 +60,19 @@ export default class UserBusiness
       await ConnectionHelper.performQuery(sql, placeholders);
 
       // query successful
-      registerResponse.status = 200;
-      registerResponse.body.token = SecurityHelper.generateToken(inputUsername);
-      registerResponse.body.message = "Vous avez bien été inscrit(e).";
+      loginResponse.status = 200;
+      loginResponse.body.token = SecurityHelper.generateToken(inputUsername);
+      loginResponse.body.success = "Vous avez bien été inscrit(e).";
     } catch (err) {
-      // query failed
       if (err instanceof SqlError) {
         if (err.errno === 1062) {
-          registerResponse.status = 409;
-          registerResponse.body.message = "Ce nom d'utilisateur est déjà utilisé.";
+          loginResponse.status = 409;
+          loginResponse.body.error = "Ce nom d'utilisateur est déjà utilisé.";
+        } else {
+          loginResponse.body.error = "Nom d'utilisateur ou mot de passe incorrect.";
         }
       }
     }
-    return registerResponse;
+    return loginResponse;
   }
 }
