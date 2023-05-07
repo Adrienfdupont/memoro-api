@@ -2,37 +2,51 @@ import express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
 import ConnectionHelper from "./helper/ConnectionHelper";
 import UserBusiness from "./business/UserBusiness";
-import LoginResponse from "./types/LoginResponse";
 import SecurityHelper from "./helper/SecurityHelper";
-import CardAddResponse from "./types/CardAddResponse";
 import CardBusiness from "./business/CardBusiness";
-import RegisterResponse from "./types/RegisterReponse";
 import Card from "./types/Card";
+import { SqlError } from "mariadb";
 
 const app = express();
 app.use(bodyParser.json());
 ConnectionHelper.createPool();
+
 let authUserId: number;
+let httpCode: number = 500;
+let body: Object;
 
-
-// ------------------------- routes --------------------------
+// ---------------------------------- routes ----------------------------------
 
 app.post("/login", async (req, res) => {
-  const loginResponse: LoginResponse = await UserBusiness.login(
-    req.body.username,
-    req.body.password
-    );
-  res.status(loginResponse.status).json(loginResponse.body);
+  try {
+    const token: string | null = await UserBusiness.login(req.body.username, req.body.password);
+    if (token !== null) {
+      httpCode = 200;
+      body = { token: token };
+    } else {
+      httpCode = 403;
+      body = { error: "Nom d'utilisateur ou mot de passe incorrect" };
+    }
+  } catch (err) {
+    body = { error: "Une erreur est survenue." };
+  }
+  res.status(httpCode).json(body);
 });
 
 app.post("/user", async (req, res) => {
-  const registerResponse: RegisterResponse = await UserBusiness.register(
-    req.body.username,
-    req.body.password
-    );
-    res.status(registerResponse.status).json(registerResponse.body);
+  try {
+    await UserBusiness.register(req.body.username, req.body.password);
+    httpCode = 200;
+    body = { success: "Vous avez bien été inscrit(e)." };
+  } catch (err) {
+    if (err instanceof SqlError && err.errno === 1062) {
+      httpCode = 409;
+      body = { error: "Ce nom d'utilisateur est déjà utilisé." };
+    }
+  }
+  res.status(httpCode).json(body);
 });
-  
+
 // ---------- authentication necessary ------------
 
 function middleware(req: Request, res: Response, next: NextFunction) {
@@ -45,25 +59,39 @@ function middleware(req: Request, res: Response, next: NextFunction) {
       }
       next();
     } catch (err) {
-      res.status(401).json({error: "Token invalide"});
+      res.status(401).json({ error: "Token invalide." });
     }
+  } else {
+    res.status(401).json({ error: "Token invalide." });
   }
 }
-
 app.use(middleware);
 
 app.get("/cards", async (req, res) => {
-  const cards: Card[] = await CardBusiness.getCards(authUserId);
-  res.status(200).json(cards);
-})
+  try {
+    const cards: Card[] = await CardBusiness.getCards(authUserId);
+    httpCode = 200;
+    body = { cards: cards };
+  } catch (err) {
+    body = { error: "Une erreur est survenue" };
+  }
+  res.status(httpCode).json(body);
+});
 
 app.post("/card", async (req, res) => {
-  const cardAddResponse: CardAddResponse = await CardBusiness.addCard(
-    req.body.label, req.body.value, authUserId
-  )
-  res.status(cardAddResponse.status).json(cardAddResponse.body);
-})
-
-
+  try {
+    await CardBusiness.addCard(req.body.label, req.body.value, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été ajoutée." };
+  } catch (err) {
+    if (err instanceof SqlError && err.errno === 1062) {
+      httpCode = 409;
+      body = { error: "Vous possédez déjà une carte avec ce label." };
+    } else {
+      body = { error: "Une erreur est survenue" };
+    }
+  }
+  res.status(httpCode).json(body);
+});
 
 app.listen(3000, () => console.log("Serveur démarré"));

@@ -15,10 +15,7 @@ export default class ConnectionHelper {
     });
   }
 
-  static async performQuery(
-    sql: string,
-    placeholders: Array<string>
-  ): Promise<any> {
+  static async performQuery(sql: string, placeholders: Array<string>): Promise<Object[]> {
     const connection: Connection = await ConnectionHelper.pool.getConnection();
 
     const result = await connection.query(sql, placeholders);
