@@ -1,3 +1,4 @@
+import { SqlError } from "mariadb";
 import ConnectionHelper from "../helper/ConnectionHelper";
 import CardAddResponse from "../types/CardAddResponse";
 
@@ -15,7 +16,7 @@ export default class CardBusiness
 
         try {
             // perform the query
-            const sql = "INSERT INTO cards(label, value, user_id) VALUES(?, ?, ?)";
+            const sql = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
             const placeholders = [inputLabel, inputValue, userId.toString()];
             await ConnectionHelper.performQuery(sql, placeholders);
 
@@ -23,7 +24,12 @@ export default class CardBusiness
             CardAddResponse.status = 200;
             CardAddResponse.body.success = "La carte a bien été ajoutée";
         } catch (err) {
-            console.log(err);
+            if (err instanceof SqlError && err.errno === 1062) {
+                CardAddResponse.status = 409;
+                CardAddResponse.body.error = "Vous possédez déjà une carte avec ce label.";
+            } else {
+                CardAddResponse.body.error = "Une erreur est survenue";
+            }
         }
         return CardAddResponse;
     }

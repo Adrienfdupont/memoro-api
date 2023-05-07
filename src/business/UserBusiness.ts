@@ -64,13 +64,11 @@ export default class UserBusiness
       registerResponse.status = 200;
       registerResponse.body.success = "Vous avez bien été inscrit(e).";
     } catch (err) {
-      if (err instanceof SqlError) {
-        if (err.errno === 1062) {
-          registerResponse.status = 409;
-          registerResponse.body.error = "Ce nom d'utilisateur est déjà utilisé.";
-        } else {
-          registerResponse.body.error = "Une erreur est survenue";
-        }
+      if (err instanceof SqlError && err.errno === 1062) {
+        registerResponse.status = 409;
+        registerResponse.body.error = "Ce nom d'utilisateur est déjà utilisé.";
+      } else {
+        registerResponse.body.error = "Une erreur est survenue";
       }
     }
     return registerResponse;

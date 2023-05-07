@@ -11,7 +11,7 @@ import RegisterResponse from "./types/RegisterReponse";
 const app = express();
 app.use(bodyParser.json());
 ConnectionHelper.createPool();
-let authUserId: number | null;
+let authUserId: number;
 
 
 // ------------------------- routes --------------------------
@@ -39,8 +39,9 @@ function middleware(req: Request, res: Response, next: NextFunction) {
   if (token !== undefined) {
     try {
       const userId: number | null = SecurityHelper.verifyToken(token);
-      authUserId = userId;
-      console.log(authUserId);
+      if (userId !== null) {
+        authUserId = userId;
+      }
       next();
     } catch (err) {
       res.status(401).json({error: "Token invalide"});
@@ -50,14 +51,14 @@ function middleware(req: Request, res: Response, next: NextFunction) {
 
 app.use(middleware);
 
-app.get("/", (req, res) => {
-  res.send("Cette route n'est pas censée s'afficher sans authentification");
-});
-
-app.post("/card", (req, res) => {
+app.post("/card", async (req, res) => {
+  console.log(req.body);
   const cardAddResponse: CardAddResponse = await CardBusiness.addCard(
-    req.body.label, req.body.value, 
+    req.body.label, req.body.value, authUserId
   )
+  res.status(cardAddResponse.status).json(cardAddResponse.body);
 })
+
+
 
 app.listen(3000, () => console.log("Serveur démarré"));
