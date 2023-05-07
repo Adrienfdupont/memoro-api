@@ -7,6 +7,7 @@ import SecurityHelper from "./helper/SecurityHelper";
 import CardAddResponse from "./types/CardAddResponse";
 import CardBusiness from "./business/CardBusiness";
 import RegisterResponse from "./types/RegisterReponse";
+import Card from "./types/Card";
 
 const app = express();
 app.use(bodyParser.json());
@@ -51,8 +52,12 @@ function middleware(req: Request, res: Response, next: NextFunction) {
 
 app.use(middleware);
 
+app.get("/cards", async (req, res) => {
+  const cards: Card[] = await CardBusiness.getCards(authUserId);
+  res.status(200).json(cards);
+})
+
 app.post("/card", async (req, res) => {
-  console.log(req.body);
   const cardAddResponse: CardAddResponse = await CardBusiness.addCard(
     req.body.label, req.body.value, authUserId
   )
