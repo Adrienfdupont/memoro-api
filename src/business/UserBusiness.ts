@@ -16,6 +16,7 @@ export default class UserBusiness
         error: "",
       },
     };
+    
     try {
       // perfom the query
       const sql = "SELECT * FROM users WHERE name = ?";

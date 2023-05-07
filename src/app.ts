@@ -4,6 +4,8 @@ import ConnectionHelper from "./helper/ConnectionHelper";
 import UserBusiness from "./business/UserBusiness";
 import LoginResponse from "./types/LoginResponse";
 import SecurityHelper from "./helper/SecurityHelper";
+import CardAddResponse from "./types/CardAddResponse";
+import CardBusiness from "./business/CardBusiness";
 
 const app = express();
 app.use(bodyParser.json());
@@ -42,5 +44,11 @@ app.use(middlewareFunction);
 app.get("/", (req, res) => {
   res.send("Cette route n'est pas censée s'afficher sans authentification");
 });
+
+app.post("/card", (req, res) => {
+  const cardAddResponse: CardAddResponse = await CardBusiness.addCard(
+    req.body.label, req.body.value, 
+  )
+})
 
 app.listen(3000, () => console.log("Serveur démarré"));
