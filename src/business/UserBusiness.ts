@@ -3,6 +3,7 @@ import { SqlError } from "mariadb";
 import bcrypt from "bcrypt";
 import SecurityHelper from "../helper/SecurityHelper";
 import LoginResponse from "../types/LoginResponse";
+import RegisterResponse from "../types/RegisterReponse";
 
 export default class UserBusiness
 {
@@ -26,12 +27,12 @@ export default class UserBusiness
       ) {
         // password matches username
         loginResponse.status = 200;
-        loginResponse.body.token = SecurityHelper.generateToken(inputUsername);
+        loginResponse.body.token = SecurityHelper.generateToken(inputUsername, result[0].id);
         loginResponse.body.success = "Authentification réussie.";
       } else {
         // authentication failed
         loginResponse.status = 403;
-        loginResponse.body.success = "Nom d'utilisateur ou mot de passe incorrect.";
+        loginResponse.body.error = "Nom d'utilisateur ou mot de passe incorrect.";
       }
     } catch (err) {
       loginResponse.body.error = "Une erreur est survenue";
@@ -39,12 +40,11 @@ export default class UserBusiness
     return loginResponse;
   }
 
-  static async register(inputUsername: string, inputPassword: string): Promise<LoginResponse>
+  static async register(inputUsername: string, inputPassword: string): Promise<RegisterResponse>
   {
-    const loginResponse: LoginResponse = {
+    const registerResponse: RegisterResponse = {
       status: 500,
       body: {
-        token: "",
         success: "",
         error: "",
       },
@@ -60,19 +60,18 @@ export default class UserBusiness
       await ConnectionHelper.performQuery(sql, placeholders);
 
       // query successful
-      loginResponse.status = 200;
-      loginResponse.body.token = SecurityHelper.generateToken(inputUsername);
-      loginResponse.body.success = "Vous avez bien été inscrit(e).";
+      registerResponse.status = 200;
+      registerResponse.body.success = "Vous avez bien été inscrit(e).";
     } catch (err) {
       if (err instanceof SqlError) {
         if (err.errno === 1062) {
-          loginResponse.status = 409;
-          loginResponse.body.error = "Ce nom d'utilisateur est déjà utilisé.";
+          registerResponse.status = 409;
+          registerResponse.body.error = "Ce nom d'utilisateur est déjà utilisé.";
         } else {
-          loginResponse.body.error = "Nom d'utilisateur ou mot de passe incorrect.";
+          registerResponse.body.error = "Une erreur est survenue";
         }
       }
     }
-    return loginResponse;
+    return registerResponse;
   }
 }

@@ -19,7 +19,7 @@ export default class ConnectionHelper {
     sql: string,
     placeholders: Array<string>
   ): Promise<any> {
-    let connection: Connection | undefined = undefined;
+    let connection: Connection | undefined;
     connection = await ConnectionHelper.pool.getConnection();
 
     const result = await connection.query(sql, placeholders);

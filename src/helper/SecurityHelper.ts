@@ -3,7 +3,7 @@ import crypto from "crypto";
 
 export default class SecurityHelper
 {
-  static generateToken(username: string): string {
+  static generateToken(username: string, userId: number): string {
     // generate the header
     const header = JSON.stringify({
       alg: "RSA-SHA256",
@@ -16,7 +16,8 @@ export default class SecurityHelper
 
     const payload = JSON.stringify({
       username: username,
-      "expiration date": date,
+      userId: userId,
+      expirationDate: date,
     });
 
     // cypher the payload
@@ -35,38 +36,40 @@ export default class SecurityHelper
     return token;
   }
 
-  static verifyToken(token: string): boolean {
+  static verifyToken(token: string): number | null {
     
-    try {
-      // fetch token elements
-      const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
-      
-      // verify token type and expiration date
-      const header = JSON.parse(
-        Buffer.from(encodedHeader, "base64").toString("utf-8")
-      );
-      const stringPayload = Buffer.from(encodedPayload, "base64").toString(
-        "utf-8"
-      );
-      const payload = JSON.parse(stringPayload);
-      
-      if (header.typ !== "AWT" || new Date(payload["expiration date"]) < new Date()) {
-        return false;
-      }
+    // fetch token elements
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
+    
+    // verify token type and expiration date
+    const header = JSON.parse(
+      Buffer.from(encodedHeader, "base64").toString("utf-8")
+    );
+    const stringPayload = Buffer.from(encodedPayload, "base64").toString(
+      "utf-8"
+    );
+    const payload = JSON.parse(stringPayload);
+    
+    const expirationDate: Date = new Date(payload["expiration date"]);
+    const today: Date = new Date();
 
-      // Get the public key
-      const publicKeyContent = fs.readFileSync("keys/publickey.pem").toString();
-      const publicKey = crypto.createPublicKey(publicKeyContent);
+    if (header.typ !== "AWT" || expirationDate < today) {
+      return null;
+    }
 
-      // Verify the signature
-      const verifier = crypto.createVerify("RSA-SHA256");
-      verifier.write(stringPayload);
-      verifier.end();
+    // Get the public key
+    const publicKeyContent = fs.readFileSync("keys/publickey.pem").toString();
+    const publicKey = crypto.createPublicKey(publicKeyContent);
 
-      const verified = verifier.verify(publicKey, encodedSignature, "base64");
-      return verified;
-    } catch (err) {
-      return false;
+    // Verify the signature
+    const verifier = crypto.createVerify("RSA-SHA256");
+    verifier.write(stringPayload);
+    verifier.end();
+
+    if (verifier.verify(publicKey, encodedSignature, "base64")) {
+      return payload.userId;
+    } else {
+      return null;
     }
   }
 }

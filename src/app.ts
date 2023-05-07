@@ -4,43 +4,54 @@ import ConnectionHelper from "./helper/ConnectionHelper";
 import UserBusiness from "./business/UserBusiness";
 import LoginResponse from "./types/LoginResponse";
 import SecurityHelper from "./helper/SecurityHelper";
+import RegisterResponse from "./types/RegisterReponse";
 
 const app = express();
 app.use(bodyParser.json());
 ConnectionHelper.createPool();
+let authUserId: number | null;
+
+
+// ------------------------- routes --------------------------
 
 app.post("/login", async (req, res) => {
   const loginResponse: LoginResponse = await UserBusiness.login(
     req.body.username,
     req.body.password
-  );
+    );
   res.status(loginResponse.status).json(loginResponse.body);
 });
 
 app.post("/user", async (req, res) => {
-  const loginResponse: LoginResponse = await UserBusiness.register(
+  const registerResponse: RegisterResponse = await UserBusiness.register(
     req.body.username,
     req.body.password
-  );
-  res.status(loginResponse.status).json(loginResponse.body);
+    );
+    res.status(registerResponse.status).json(registerResponse.body);
 });
+  
+// ---------- authentication necessary ------------
 
-function middlewareFunction(req: Request, res: Response, next: NextFunction) {
-  const token = req.get("Authorization");
-  if (token) {
-    if (SecurityHelper.verifyToken(token)) {
+function middleware(req: Request, res: Response, next: NextFunction) {
+  const token: string | undefined = req.get("Authorization");
+  if (token !== undefined) {
+    try {
+      const userId: number | null = SecurityHelper.verifyToken(token);
+      authUserId = userId;
+      console.log(authUserId);
       next();
-    } else {
-      res.redirect("/login");
+    } catch (err) {
+      res.status(401).json({error: "Token invalide"});
     }
-  } else {
-    res.redirect("/login");
   }
 }
-app.use(middlewareFunction);
+
+app.use(middleware);
 
 app.get("/", (req, res) => {
   res.send("Cette route n'est pas censée s'afficher sans authentification");
 });
+
+
 
 app.listen(3000, () => console.log("Serveur démarré"));
