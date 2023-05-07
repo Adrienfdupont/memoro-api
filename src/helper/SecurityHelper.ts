@@ -36,13 +36,11 @@ export default class SecurityHelper
   }
 
   static verifyToken(token: string): boolean {
-    if (token.split(".").length !== 3) {
-      return false;
-    }
-    // fetch token elements
-    const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
-
+    
     try {
+      // fetch token elements
+      const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
+      
       // verify token type and expiration date
       const header = JSON.parse(
         Buffer.from(encodedHeader, "base64").toString("utf-8")
