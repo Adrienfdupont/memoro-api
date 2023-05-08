@@ -71,7 +71,9 @@ app.get("/cards", async (req, res) => {
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
-    body = { error: "Une erreur est survenue" };
+    if (err instanceof Error) {
+      body = { error: err.message };
+    }
   }
   res.status(httpCode).json(body);
 });
