@@ -6,6 +6,7 @@ import SecurityHelper from "./helper/SecurityHelper";
 import CardBusiness from "./business/CardBusiness";
 import Card from "./types/Card";
 import { SqlError } from "mariadb";
+import BusinessError from "./errors/BusinessError";
 
 const app = express();
 app.use(bodyParser.json());
@@ -86,6 +87,7 @@ app.get("/card", async (req, res) => {
     body = { card: card };
   } catch (err) {
     if (err instanceof Error) {
+      httpCode = 404;
       body = { error: err.message };
     }
   }
@@ -94,13 +96,33 @@ app.get("/card", async (req, res) => {
 
 app.post("/card", async (req, res) => {
   try {
-    await CardBusiness.addCard(req.body.label, req.body.value, authUserId);
+    await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
     httpCode = 200;
     body = { success: "La carte a bien été ajoutée." };
   } catch (err) {
     if (err instanceof SqlError && err.errno === 1062) {
       httpCode = 409;
       body = { error: "Vous possédez déjà une carte avec ce label." };
+    } else if (err instanceof Error) {
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.put("/card/:id", async (req, res) => {
+  const cardId: string = req.params.id;
+  try {
+    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été modifiée" };
+  } catch (err) {
+    if (err instanceof SqlError) {
+      console.log(err);
+    }
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
     }
   }
   res.status(httpCode).json(body);

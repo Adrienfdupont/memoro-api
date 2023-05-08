@@ -1,5 +1,6 @@
 import ConnectionHelper from "../helper/ConnectionHelper";
 import Card from "../types/Card";
+import BusinessError from "../errors/BusinessError";
 
 export default class CardBusiness {
   static async getCards(userId: number): Promise<Card[]> {
@@ -37,9 +38,26 @@ export default class CardBusiness {
     return card;
   }
 
-  static async addCard(inputLabel: string, inputValue: string, userId: number): Promise<void> {
+  static async addCard(label: string, translation: string, userId: number): Promise<void> {
+    if (label.length === 0 || translation.length === 0) {
+      throw new Error("Veuillez fournir un label et sa traduction.");
+    }
     const sql: string = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
-    const placeholders: string[] = [inputLabel, inputValue, userId.toString()];
+    const placeholders: string[] = [label, translation, userId.toString()];
+    await ConnectionHelper.performQuery(sql, placeholders);
+  }
+
+  static async updateCard(cardId: string, label: string, translation: string, authUserId: number): Promise<void> {
+    if (label.length === 0 || translation.length === 0) {
+      throw new BusinessError(500, "Veuillez fournir un label et sa traduction.");
+    }
+    // verify that the user has the rights
+    const card: Card = await CardBusiness.getCard(cardId);
+    if (card.userId !== authUserId) {
+      throw new BusinessError(403, "Vous n'avez pas les droits sur cette carte");
+    }
+    const sql: string = "UPDATE cards SET label=?, translation=? WHERE id=?";
+    const placeholders: string[] = [label, translation, cardId];
     await ConnectionHelper.performQuery(sql, placeholders);
   }
 }
