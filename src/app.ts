@@ -24,8 +24,8 @@ app.post("/login", async (req, res) => {
     httpCode = 200;
     body = { token: token };
   } catch (err) {
-    if (err instanceof Error) {
-      httpCode = 403;
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
       body = { error: err.message };
     }
   }
@@ -41,6 +41,9 @@ app.post("/user", async (req, res) => {
     if (err instanceof SqlError && err.errno === 1062) {
       httpCode = 409;
       body = { error: "Ce nom d'utilisateur est déjà utilisé." };
+    } else if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
     }
   }
   res.status(httpCode).json(body);
@@ -72,7 +75,8 @@ app.get("/cards", async (req, res) => {
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
-    if (err instanceof Error) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
       body = { error: err.message };
     }
   }
@@ -86,8 +90,8 @@ app.get("/card", async (req, res) => {
     httpCode = 200;
     body = { card: card };
   } catch (err) {
-    if (err instanceof Error) {
-      httpCode = 404;
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
       body = { error: err.message };
     }
   }
@@ -103,7 +107,8 @@ app.post("/card", async (req, res) => {
     if (err instanceof SqlError && err.errno === 1062) {
       httpCode = 409;
       body = { error: "Vous possédez déjà une carte avec ce label." };
-    } else if (err instanceof Error) {
+    } else if (err instanceof BusinessError) {
+      httpCode = err.status;
       body = { error: err.message };
     }
   }
@@ -117,9 +122,6 @@ app.put("/card/:id", async (req, res) => {
     httpCode = 200;
     body = { success: "La carte a bien été modifiée" };
   } catch (err) {
-    if (err instanceof SqlError) {
-      console.log(err);
-    }
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };

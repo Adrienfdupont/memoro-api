@@ -26,7 +26,7 @@ export default class CardBusiness {
     const result: any[] = await ConnectionHelper.performQuery(sql, placeholder);
 
     if (result.length === 0) {
-      throw new Error("Aucune carte trouvée");
+      throw new BusinessError(404, "Aucune carte trouvée");
     }
     const card: Card = {
       id: result[0].id,
@@ -40,7 +40,7 @@ export default class CardBusiness {
 
   static async addCard(label: string, translation: string, userId: number): Promise<void> {
     if (label.length === 0 || translation.length === 0) {
-      throw new Error("Veuillez fournir un label et sa traduction.");
+      throw new BusinessError(400, "Veuillez fournir un label et sa traduction.");
     }
     const sql: string = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
     const placeholders: string[] = [label, translation, userId.toString()];
@@ -49,7 +49,7 @@ export default class CardBusiness {
 
   static async updateCard(cardId: string, label: string, translation: string, authUserId: number): Promise<void> {
     if (label.length === 0 || translation.length === 0) {
-      throw new BusinessError(500, "Veuillez fournir un label et sa traduction.");
+      throw new BusinessError(400, "Veuillez fournir un label et sa traduction.");
     }
     // verify that the user has the rights
     const card: Card = await CardBusiness.getCard(cardId);
