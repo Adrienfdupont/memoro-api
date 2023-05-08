@@ -78,6 +78,20 @@ app.get("/cards", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
+app.get("/card", async (req, res) => {
+  const cardId: any = req.query.id;
+  try {
+    const card: Card = await CardBusiness.getCard(cardId);
+    httpCode = 200;
+    body = { card: card };
+  } catch (err) {
+    if (err instanceof Error) {
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
 app.post("/card", async (req, res) => {
   try {
     await CardBusiness.addCard(req.body.label, req.body.value, authUserId);
