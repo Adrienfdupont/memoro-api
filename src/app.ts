@@ -13,22 +13,20 @@ ConnectionHelper.createPool();
 
 let authUserId: number;
 let httpCode: number = 500;
-let body: Object;
+let body: Object = { error: "Une erreur est survenue." };
 
 // ---------------------------------- routes ----------------------------------
 
 app.post("/login", async (req, res) => {
   try {
     const token: string | null = await UserBusiness.login(req.body.username, req.body.password);
-    if (token !== null) {
-      httpCode = 200;
-      body = { token: token };
-    } else {
-      httpCode = 403;
-      body = { error: "Nom d'utilisateur ou mot de passe incorrect" };
-    }
+    httpCode = 200;
+    body = { token: token };
   } catch (err) {
-    body = { error: "Une erreur est survenue." };
+    if (err instanceof Error) {
+      httpCode = 403;
+      body = { error: err.message };
+    }
   }
   res.status(httpCode).json(body);
 });
@@ -101,8 +99,6 @@ app.post("/card", async (req, res) => {
     if (err instanceof SqlError && err.errno === 1062) {
       httpCode = 409;
       body = { error: "Vous possédez déjà une carte avec ce label." };
-    } else {
-      body = { error: "Une erreur est survenue" };
     }
   }
   res.status(httpCode).json(body);
