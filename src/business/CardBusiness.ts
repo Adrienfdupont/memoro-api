@@ -71,4 +71,10 @@ export default class CardBusiness {
     const placeholders: string[] = [cardId];
     await ConnectionHelper.performQuery(sql, placeholders);
   }
+
+  static async removeUserCards(userId: number): Promise<void> {
+    const sql: string = "DELETE FROM cards WHERE user_id = ?";
+    const placeholders: string[] = [userId.toString()];
+    await ConnectionHelper.performQuery(sql, placeholders);
+  }
 }

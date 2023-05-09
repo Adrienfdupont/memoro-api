@@ -2,6 +2,7 @@ import ConnectionHelper from "../helper/ConnectionHelper";
 import bcrypt from "bcrypt";
 import SecurityHelper from "../helper/SecurityHelper";
 import BusinessError from "../errors/BusinessError";
+import CardBusiness from "./CardBusiness";
 
 export default class UserBusiness {
   static async login(username: string, password: string): Promise<string> {
@@ -43,5 +44,17 @@ export default class UserBusiness {
     const sql: string = "UPDATE users SET name = ?, password = ? WHERE id = ?";
     const placeholders: string[] = [username, hashedPassword, authUserId.toString()];
     await ConnectionHelper.performQuery(sql, placeholders);
+  }
+
+  static async removeUser(authUserId: number): Promise<void> {
+    await CardBusiness.removeUserCards(authUserId);
+
+    const sql: string = "DELETE FROM users WHERE id = ?";
+    const placeholders: string[] = ["344"];
+    const result: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+    if (result.affectedRows === 0) {
+      throw new BusinessError(404, "Utilisateur non existant.");
+    }
   }
 }

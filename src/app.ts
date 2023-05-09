@@ -69,11 +69,25 @@ function middleware(req: Request, res: Response, next: NextFunction) {
 }
 app.use(middleware);
 
-app.put("/user/", async (req, res) => {
+app.put("/user", async (req, res) => {
   try {
     await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
     httpCode = 200;
     body = { success: "Vos information ont bien été modifiées." };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.delete("/user", async (req, res) => {
+  try {
+    await UserBusiness.removeUser(authUserId);
+    httpCode = 200;
+    body = { success: "Utilisateur supprimé." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
