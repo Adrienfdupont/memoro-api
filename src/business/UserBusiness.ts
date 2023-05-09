@@ -8,8 +8,7 @@ export default class UserBusiness {
     if (username.length === 0 || password.length === 0) {
       throw new BusinessError(401, "Veuillez remplir les champs.");
     }
-    // perfom the query
-    const sql = "SELECT * FROM users WHERE name = ?";
+    const sql: string = "SELECT * FROM users WHERE name = ?";
     const placeholders: string[] = [username];
     const result: any[] = await ConnectionHelper.performQuery(sql, placeholders);
 
@@ -28,9 +27,21 @@ export default class UserBusiness {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // perform the query
-    const sql = "INSERT INTO users(name, password) VALUES(?, ?)";
+    const sql: string = "INSERT INTO users(name, password) VALUES(?, ?)";
     const placeholders = [username, hashedPassword];
+    await ConnectionHelper.performQuery(sql, placeholders);
+  }
+
+  static async updateUser(username: string, password: string, authUserId: number) {
+    if (username.length === 0 || password.length === 0) {
+      throw new BusinessError(401, "Veuillez remplir les champs.");
+    }
+    // hash the input password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    const sql: string = "UPDATE users SET name = ?, password = ? WHERE id = ?";
+    const placeholders: string[] = [username, hashedPassword, authUserId.toString()];
     await ConnectionHelper.performQuery(sql, placeholders);
   }
 }
