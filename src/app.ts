@@ -130,4 +130,19 @@ app.put("/card/:id", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
+app.delete("/card/:id", async (req, res) => {
+  const cardId: string = req.params.id;
+  try {
+    await CardBusiness.removeCard(cardId, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été supprimée." };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
 app.listen(3000, () => console.log("Serveur démarré"));

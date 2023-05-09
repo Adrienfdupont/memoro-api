@@ -22,7 +22,7 @@ export default class CardBusiness {
 
   static async getCard(cardId: string): Promise<Card> {
     const sql: string = "SELECT * FROM cards WHERE id = ?";
-    const placeholder: string[] = [cardId.toString()];
+    const placeholder: string[] = [cardId];
     const result: any[] = await ConnectionHelper.performQuery(sql, placeholder);
 
     if (result.length === 0) {
@@ -56,8 +56,19 @@ export default class CardBusiness {
     if (card.userId !== authUserId) {
       throw new BusinessError(403, "Vous n'avez pas les droits sur cette carte");
     }
-    const sql: string = "UPDATE cards SET label=?, translation=? WHERE id=?";
+    const sql: string = "UPDATE cards SET label = ?, translation=? WHERE id = ?";
     const placeholders: string[] = [label, translation, cardId];
+    await ConnectionHelper.performQuery(sql, placeholders);
+  }
+
+  static async removeCard(cardId: string, authUserId: number): Promise<void> {
+    const card: Card = await CardBusiness.getCard(cardId);
+    // verify that the user has the rights
+    if (card.userId !== authUserId) {
+      throw new BusinessError(403, "Vous n'avez pas les droits sur cette carte");
+    }
+    const sql: string = "DELETE FROM cards WHERE id = ?";
+    const placeholders: string[] = [cardId];
     await ConnectionHelper.performQuery(sql, placeholders);
   }
 }
