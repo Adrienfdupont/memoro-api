@@ -59,15 +59,20 @@ export default class UserBusiness {
     const hashedPassword: string = await bcrypt.hash(password, saltRounds);
     const sql: string = "UPDATE users SET name = ?, password = ? WHERE id = ?";
     const placeholders: string[] = [username, hashedPassword, authUserId.toString()];
+    let sqlResult: any;
 
     try {
-      await ConnectionHelper.performQuery(sql, placeholders);
+      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
         throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
       } else {
         throw new BusinessError(500, "Une erreur est survenue.");
       }
+    }
+
+    if (sqlResult.affectedRows === 0) {
+      throw new BusinessError(500, "Une erreur est survenue.");
     }
   }
 
