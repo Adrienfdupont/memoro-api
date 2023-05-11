@@ -5,7 +5,6 @@ import UserBusiness from "./business/UserBusiness";
 import SecurityHelper from "./helper/SecurityHelper";
 import CardBusiness from "./business/CardBusiness";
 import Card from "./types/Card";
-import { SqlError } from "mariadb";
 import BusinessError from "./errors/BusinessError";
 
 const app = express();
@@ -19,8 +18,10 @@ let body: Object = { error: "Une erreur est survenue." };
 // ---------------------------------- routes ----------------------------------
 
 app.post("/login", async (req, res) => {
+  let token: string | null;
+
   try {
-    const token: string | null = await UserBusiness.login(req.body.username, req.body.password);
+    token = await UserBusiness.login(req.body.username, req.body.password);
     httpCode = 200;
     body = { token: token };
   } catch (err) {
@@ -38,10 +39,7 @@ app.post("/user", async (req, res) => {
     httpCode = 200;
     body = { success: "Vous avez bien été inscrit(e)." };
   } catch (err) {
-    if (err instanceof SqlError && err.errno === 1062) {
-      httpCode = 409;
-      body = { error: "Ce nom d'utilisateur est déjà utilisé." };
-    } else if (err instanceof BusinessError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -53,18 +51,25 @@ app.post("/user", async (req, res) => {
 
 function middleware(req: Request, res: Response, next: NextFunction) {
   const token: string | undefined = req.get("Authorization");
+
   if (token !== undefined) {
+    let userId: number | null;
+
     try {
-      const userId: number | null = SecurityHelper.verifyToken(token);
+      userId = SecurityHelper.verifyToken(token);
       if (userId !== null) {
         authUserId = userId;
       }
       next();
     } catch (err) {
-      res.status(401).json({ error: "Token invalide." });
+      httpCode = 401;
+      body = { error: "Token invalide." };
+      res.status(httpCode).json(body);
     }
   } else {
-    res.status(401).json({ error: "Token invalide." });
+    httpCode = 401;
+    body = { error: "Token invalide." };
+    res.status(httpCode).json(body);
   }
 }
 app.use(middleware);
@@ -73,7 +78,7 @@ app.put("/user", async (req, res) => {
   try {
     await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
     httpCode = 200;
-    body = { success: "Vos information ont bien été modifiées." };
+    body = { success: "Vos informations ont bien été modifiées." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
@@ -98,8 +103,10 @@ app.delete("/user", async (req, res) => {
 });
 
 app.get("/cards", async (req, res) => {
+  let cards: Card[];
+
   try {
-    const cards: Card[] = await CardBusiness.getCards(authUserId);
+    cards = await CardBusiness.getCards(authUserId);
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
@@ -113,8 +120,10 @@ app.get("/cards", async (req, res) => {
 
 app.get("/card", async (req, res) => {
   const cardId: any = req.query.id;
+  let card: Card;
+
   try {
-    const card: Card = await CardBusiness.getCard(cardId);
+    card = await CardBusiness.getCard(cardId);
     httpCode = 200;
     body = { card: card };
   } catch (err) {
@@ -132,10 +141,7 @@ app.post("/card", async (req, res) => {
     httpCode = 200;
     body = { success: "La carte a bien été ajoutée." };
   } catch (err) {
-    if (err instanceof SqlError && err.errno === 1062) {
-      httpCode = 409;
-      body = { error: "Vous possédez déjà une carte avec ce label." };
-    } else if (err instanceof BusinessError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -145,6 +151,7 @@ app.post("/card", async (req, res) => {
 
 app.put("/card/:id", async (req, res) => {
   const cardId: string = req.params.id;
+
   try {
     await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
     httpCode = 200;
@@ -160,6 +167,7 @@ app.put("/card/:id", async (req, res) => {
 
 app.delete("/card/:id", async (req, res) => {
   const cardId: string = req.params.id;
+
   try {
     await CardBusiness.removeCard(cardId, authUserId);
     httpCode = 200;
