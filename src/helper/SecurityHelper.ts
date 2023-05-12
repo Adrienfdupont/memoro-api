@@ -1,8 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 
-export default class SecurityHelper
-{
+export default class SecurityHelper {
   static generateToken(username: string, userId: number): string {
     // generate the header
     const header = JSON.stringify({
@@ -37,20 +36,15 @@ export default class SecurityHelper
   }
 
   static verifyToken(token: string): number | null {
-    
     // fetch token elements
     const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
-    
+
     // verify token type and expiration date
-    const header = JSON.parse(
-      Buffer.from(encodedHeader, "base64").toString("utf-8")
-    );
-    const stringPayload = Buffer.from(encodedPayload, "base64").toString(
-      "utf-8"
-    );
+    const header = JSON.parse(Buffer.from(encodedHeader, "base64").toString("utf-8"));
+    const stringPayload = Buffer.from(encodedPayload, "base64").toString("utf-8");
     const payload = JSON.parse(stringPayload);
-    
-    const expirationDate: Date = new Date(payload["expiration date"]);
+
+    const expirationDate: Date = new Date(payload.expirationDate);
     const today: Date = new Date();
 
     if (header.typ !== "AWT" || expirationDate < today) {
@@ -62,7 +56,7 @@ export default class SecurityHelper
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
-    const verifier = crypto.createVerify("RSA-SHA256");
+    const verifier = crypto.createVerify(header.alg);
     verifier.write(stringPayload);
     verifier.end();
 
