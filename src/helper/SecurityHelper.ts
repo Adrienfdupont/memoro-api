@@ -21,7 +21,8 @@ export default class SecurityHelper {
     });
 
     // cypher the payload
-    const privateKeyContent = fs.readFileSync("keys/privatekey.pem").toString();
+    const privateKeyBase64: string = process.env.PRIVATE_KEY ?? "";
+    const privateKeyContent = Buffer.from(privateKeyBase64, "base64").toString("utf-8");
     const privateKey = crypto.createPrivateKey(privateKeyContent);
     const signer = crypto.createSign("RSA-SHA256");
     signer.write(payload);
@@ -62,7 +63,8 @@ export default class SecurityHelper {
     }
 
     // Get the public key
-    const publicKeyContent = fs.readFileSync("keys/publickey.pem").toString();
+    const publicKeyBase64 = process.env.PUBLIC_KEY ?? "";
+    const publicKeyContent = Buffer.from(publicKeyBase64, "base64").toString("utf-8");
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
