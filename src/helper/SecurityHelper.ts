@@ -1,8 +1,9 @@
 import fs from "fs";
 import crypto from "crypto";
+import ConnectionHelper from "./ConnectionHelper";
 
 export default class SecurityHelper {
-  static generateToken(username: string, userId: number): string {
+  static async generateToken(username: string, userId: number): Promise<string> {
     // generate the header
     const header = JSON.stringify({
       alg: "RSA-SHA256",
@@ -32,10 +33,19 @@ export default class SecurityHelper {
     const encodedPayload = Buffer.from(payload).toString("base64");
     const token = `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
 
+    // store the token in the database
+    const sql: string = "INSERT INTO tokens(content, user_id) VALUES(?, ?)";
+    const placeholders: string[] = [token, userId.toString()];
+    const sqlResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+    if (sqlResult.affectedRows === 0) {
+      throw new Error("Une erreur est survenue.");
+    }
+
     return token;
   }
 
-  static verifyToken(token: string): number | null {
+  static async verifyToken(token: string): Promise<number> {
     // fetch token elements
     const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
 
@@ -48,7 +58,7 @@ export default class SecurityHelper {
     const today: Date = new Date();
 
     if (header.typ !== "AWT" || expirationDate < today) {
-      return null;
+      throw new Error("Token invalide.");
     }
 
     // Get the public key
@@ -60,10 +70,24 @@ export default class SecurityHelper {
     verifier.write(stringPayload);
     verifier.end();
 
-    if (verifier.verify(publicKey, encodedSignature, "base64")) {
-      return payload.userId;
-    } else {
-      return null;
+    if (!verifier.verify(publicKey, encodedSignature, "base64")) {
+      throw new Error("Token invalide.");
     }
+    // verify that the user didn't change password or unsubscribed
+    const sql: string = "SELECT id FROM tokens WHERE user_id = ?";
+    const placeholders: string[] = [payload.userId];
+    let sqlResult: any[];
+
+    try {
+      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+    } catch (err) {
+      throw new Error("Une erreur est survenue.");
+    }
+
+    if (sqlResult.length === 0) {
+      throw new Error("0 token trouvé.");
+    }
+
+    return payload.userId;
   }
 }

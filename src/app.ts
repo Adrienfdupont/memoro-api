@@ -49,21 +49,18 @@ app.post("/user", async (req, res) => {
 
 // ---------- authentication necessary ------------
 
-function middleware(req: Request, res: Response, next: NextFunction) {
+async function middleware(req: Request, res: Response, next: NextFunction) {
   const token: string | undefined = req.get("Authorization");
 
   if (token !== undefined) {
-    let userId: number | null;
-
     try {
-      userId = SecurityHelper.verifyToken(token);
-      if (userId !== null) {
-        authUserId = userId;
-      }
+      authUserId = await SecurityHelper.verifyToken(token);
       next();
     } catch (err) {
       httpCode = 401;
-      body = { error: "Token invalide." };
+      if (err instanceof Error) {
+        body = { error: err.message };
+      }
       res.status(httpCode).json(body);
     }
   } else {

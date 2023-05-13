@@ -25,7 +25,7 @@ export default class UserBusiness {
       throw new BusinessError(401, "Nom d'utilisateur ou mot de passe incorrect.");
     }
 
-    const token: string = SecurityHelper.generateToken(username, queryUsers[0].id);
+    const token: Promise<string> = SecurityHelper.generateToken(username, queryUsers[0].id);
     return token;
   }
 
