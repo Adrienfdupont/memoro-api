@@ -1,77 +1,181 @@
-import express from "express";
-import mariadb, { Connection, SqlError, version } from "mariadb";
+import express, { NextFunction, Request, Response } from "express";
 import bodyParser from "body-parser";
-import bcrypt, { hash } from "bcrypt";
-import dotenv from 'dotenv';
+import ConnectionHelper from "./helper/ConnectionHelper";
+import UserBusiness from "./business/UserBusiness";
+import SecurityHelper from "./helper/SecurityHelper";
+import CardBusiness from "./business/CardBusiness";
+import Card from "./types/Card";
+import BusinessError from "./errors/BusinessError";
 
 const app = express();
 app.use(bodyParser.json());
-dotenv.config();
+ConnectionHelper.createPool();
 
-const pool = mariadb.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+let authUserId: number;
+let httpCode: number = 500;
+let body: Object = { error: "Une erreur est survenue." };
+
+// ---------------------------------- routes ----------------------------------
+
+app.post("/login", async (req, res) => {
+  let token: string | null;
+
+  try {
+    token = await UserBusiness.login(req.body.username, req.body.password);
+    httpCode = 200;
+    body = { token: token };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
 });
 
-let connection: Connection | undefined = undefined;
-let msgContent: String = "";
-
-
-app.post("/api/user", async (req, res) => {
+app.post("/user", async (req, res) => {
   try {
-    connection = await pool.getConnection();
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(req.body.password, saltRounds);
-    const response = await connection.query(
-      "INSERT INTO users(name, password) VALUES(?, ?)",
-      [req.body.username, hash]
-    );
-    msgContent = "Vous avez bien été inscrit.";
-
+    await UserBusiness.register(req.body.username, req.body.password);
+    httpCode = 200;
+    body = { success: "Vous avez bien été inscrit(e)." };
   } catch (err) {
-    res.status(500);
-    if (err instanceof SqlError){
-      if (err.errno === 1062){
-        msgContent = "Ce nom est déjà utilisé.";
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+// ---------- authentication necessary ------------
+
+async function middleware(req: Request, res: Response, next: NextFunction) {
+  const token: string | undefined = req.get("Authorization");
+
+  if (token !== undefined) {
+    try {
+      authUserId = await SecurityHelper.verifyToken(token);
+      next();
+    } catch (err) {
+      httpCode = 401;
+      if (err instanceof Error) {
+        body = { error: err.message };
       }
+      res.status(httpCode).json(body);
+    }
+  } else {
+    httpCode = 401;
+    body = { error: "Token invalide." };
+    res.status(httpCode).json(body);
+  }
+}
+app.use(middleware);
+
+app.put("/user", async (req, res) => {
+  try {
+    await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
+    httpCode = 200;
+    body = { success: "Vos informations ont bien été modifiées." };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
     }
   }
-  res.send({
-    message: msgContent
-  });
-  connection?.end();
+  res.status(httpCode).json(body);
 });
 
-
-app.post("/api/login", async (req, res) => {
+app.delete("/user", async (req, res) => {
   try {
-    connection = await pool.getConnection();
-    const response = await connection.query(
-      "SELECT * FROM users WHERE name = ?",
-      [req.body.username]
-    );
-
-    if (response.length > 0 && await bcrypt.compare(req.body.password, response[0].password)){
-      msgContent = "Connecté";
-      generateToken(response[0].name);
-    } else {
-      msgContent = "Nom d'utilisateur ou mot de passe incorrect."
-    }
-
+    await UserBusiness.removeUser(authUserId);
+    httpCode = 200;
+    body = { success: "Utilisateur supprimé." };
   } catch (err) {
-    res.status(500);
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
   }
-  res.send({
-    message: msgContent
-  });
-  connection?.end();
+  res.status(httpCode).json(body);
+});
+
+app.get("/cards", async (req, res) => {
+  let cards: Card[];
+
+  try {
+    cards = await CardBusiness.getCards(authUserId);
+    httpCode = 200;
+    body = { cards: cards };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.get("/card", async (req, res) => {
+  const cardId: any = req.query.id;
+  let card: Card;
+
+  try {
+    card = await CardBusiness.getCard(cardId);
+    httpCode = 200;
+    body = { card: card };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.post("/card", async (req, res) => {
+  try {
+    await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été ajoutée." };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.put("/card/:id", async (req, res) => {
+  const cardId: string = req.params.id;
+
+  try {
+    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été modifiée" };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.delete("/card/:id", async (req, res) => {
+  const cardId: string = req.params.id;
+
+  try {
+    await CardBusiness.removeCard(cardId, authUserId);
+    httpCode = 200;
+    body = { success: "La carte a bien été supprimée." };
+  } catch (err) {
+    if (err instanceof BusinessError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
 });
 
 app.listen(3000, () => console.log("Serveur démarré"));
-
-
-function generateToken(name: String){
-  console.log(name);
-}
