@@ -74,8 +74,8 @@ export default class SecurityHelper {
       throw new Error("Token invalide.");
     }
     // verify that the user didn't change password or unsubscribed
-    const sql: string = "SELECT id FROM tokens WHERE user_id = ?";
-    const placeholders: string[] = [payload.userId];
+    const sql: string = "SELECT id FROM tokens WHERE content = ? AND user_id = ?";
+    const placeholders: string[] = [token, payload.userId];
     let sqlResult: any[];
 
     try {

@@ -63,6 +63,7 @@ export default class UserBusiness {
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+      await UserBusiness.removeTokens(authUserId);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
         throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
@@ -83,6 +84,7 @@ export default class UserBusiness {
 
     try {
       await CardBusiness.removeUserCards(authUserId);
+      await UserBusiness.removeTokens(authUserId);
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       throw new BusinessError(500, "Une erreur est survenue.");
@@ -90,6 +92,22 @@ export default class UserBusiness {
 
     if (sqlResult.affectedRows === 0) {
       throw new BusinessError(404, "Utilisateur non existant.");
+    }
+  }
+
+  static async removeTokens(userId: number): Promise<void> {
+    const sql: string = "DELETE FROM tokens WHERE user_id = ?";
+    const placeholders: string[] = [userId.toString()];
+    let sqlResult: any;
+
+    try {
+      sqlResult = ConnectionHelper.performQuery(sql, placeholders);
+    } catch (err) {
+      throw new BusinessError(500, "Une erreur est survenue.");
+    }
+
+    if (sqlResult.affectedRows === 0) {
+      throw new BusinessError(404, "Aucun token pour cet utilisateur.");
     }
   }
 }
