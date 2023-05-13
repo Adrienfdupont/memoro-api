@@ -17,6 +17,10 @@ let body: Object = { error: "Une erreur est survenue." };
 
 // ---------------------------------- routes ----------------------------------
 
+app.get("/", (req, res) => {
+  res.send("L'API fonctionne !");
+});
+
 app.post("/login", async (req, res) => {
   let token: string | null;
 
