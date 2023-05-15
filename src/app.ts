@@ -182,4 +182,5 @@ app.delete("/card/:id", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.listen(3000, () => console.log("Serveur démarré"));
+const port = process.env.PORT ?? 3000;
+app.listen(port, () => console.log("Serveur démarré"));
