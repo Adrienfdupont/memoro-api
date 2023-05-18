@@ -120,8 +120,8 @@ app.get("/cards", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get("/card", async (req, res) => {
-  const cardId: any = req.query.id;
+app.get("/card/:id", async (req, res) => {
+  const cardId: string = req.params.id;
   let card: Card;
 
   try {
