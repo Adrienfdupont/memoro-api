@@ -8,6 +8,7 @@ import Card from "./types/Card";
 import BusinessError from "./errors/BusinessError";
 
 const app = express();
+const port = process.env.PORT ?? 3000;
 app.use(bodyParser.json());
 ConnectionHelper.createPool();
 
@@ -26,7 +27,6 @@ app.post("/login", async (req, res) => {
 
   try {
     token = await UserBusiness.login(req.body.username, req.body.password);
-    httpCode = 200;
     body = { token: token };
   } catch (err) {
     if (err instanceof BusinessError) {
@@ -34,20 +34,21 @@ app.post("/login", async (req, res) => {
       body = { error: err.message };
     }
   }
+  httpCode = 200;
   res.status(httpCode).json(body);
 });
 
 app.post("/user", async (req, res) => {
   try {
     await UserBusiness.register(req.body.username, req.body.password);
-    httpCode = 200;
-    body = { success: "Vous avez bien été inscrit(e)." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "Vous avez bien été inscrit(e)." };
   res.status(httpCode).json(body);
 });
 
@@ -78,28 +79,28 @@ app.use(middleware);
 app.put("/user", async (req, res) => {
   try {
     await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
-    httpCode = 200;
-    body = { success: "Vos informations ont bien été modifiées." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "Vos informations ont bien été modifiées." };
   res.status(httpCode).json(body);
 });
 
 app.delete("/user", async (req, res) => {
   try {
     await UserBusiness.removeUser(authUserId);
-    httpCode = 200;
-    body = { success: "Utilisateur supprimé." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "Utilisateur supprimé." };
   res.status(httpCode).json(body);
 });
 
@@ -108,14 +109,14 @@ app.get("/cards", async (req, res) => {
 
   try {
     cards = await CardBusiness.getCards(authUserId);
-    httpCode = 200;
-    body = { cards: cards };
+    body = cards;
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
   res.status(httpCode).json(body);
 });
 
@@ -125,7 +126,6 @@ app.get("/card", async (req, res) => {
 
   try {
     card = await CardBusiness.getCard(cardId);
-    httpCode = 200;
     body = { card: card };
   } catch (err) {
     if (err instanceof BusinessError) {
@@ -133,20 +133,21 @@ app.get("/card", async (req, res) => {
       body = { error: err.message };
     }
   }
+  httpCode = 200;
   res.status(httpCode).json(body);
 });
 
 app.post("/card", async (req, res) => {
   try {
     await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
-    httpCode = 200;
-    body = { success: "La carte a bien été ajoutée." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "La carte a bien été ajoutée." };
   res.status(httpCode).json(body);
 });
 
@@ -155,14 +156,14 @@ app.put("/card/:id", async (req, res) => {
 
   try {
     await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
-    httpCode = 200;
-    body = { success: "La carte a bien été modifiée" };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "La carte a bien été modifiée" };
   res.status(httpCode).json(body);
 });
 
@@ -171,16 +172,15 @@ app.delete("/card/:id", async (req, res) => {
 
   try {
     await CardBusiness.removeCard(cardId, authUserId);
-    httpCode = 200;
-    body = { success: "La carte a bien été supprimée." };
   } catch (err) {
     if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
   }
+  httpCode = 200;
+  body = { success: "La carte a bien été supprimée." };
   res.status(httpCode).json(body);
 });
 
-const port = process.env.PORT ?? 3000;
 app.listen(port, () => console.log("Serveur démarré"));
