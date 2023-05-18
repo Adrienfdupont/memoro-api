@@ -2,7 +2,6 @@ import ConnectionHelper from "../helper/ConnectionHelper";
 import bcrypt from "bcrypt";
 import SecurityHelper from "../helper/SecurityHelper";
 import BusinessError from "../errors/BusinessError";
-import CardBusiness from "./CardBusiness";
 import { SqlError } from "mariadb";
 import moment from "moment";
 
@@ -26,7 +25,7 @@ export default class UserBusiness {
       throw new BusinessError(401, "Nom d'utilisateur ou mot de passe incorrect.");
     }
 
-    const token: Promise<string> = SecurityHelper.generateToken(username, queryUsers[0].id);
+    const token: string = await SecurityHelper.generateToken(username, queryUsers[0].id);
     return token;
   }
 

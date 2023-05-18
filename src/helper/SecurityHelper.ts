@@ -36,15 +36,6 @@ export default class SecurityHelper {
     const encodedPayload = Buffer.from(payload).toString("base64");
     const token = `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
 
-    // store the token in the database
-    const sql: string = "INSERT INTO tokens(content, user_id) VALUES(?, ?)";
-    const placeholders: string[] = [token, userId.toString()];
-    const sqlResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-
-    if (sqlResult.affectedRows === 0) {
-      throw new Error("Une erreur est survenue.");
-    }
-
     return token;
   }
 
