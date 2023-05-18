@@ -4,6 +4,7 @@ import SecurityHelper from "../helper/SecurityHelper";
 import BusinessError from "../errors/BusinessError";
 import CardBusiness from "./CardBusiness";
 import { SqlError } from "mariadb";
+import moment from "moment";
 
 export default class UserBusiness {
   static async login(username: string, password: string): Promise<string> {
@@ -36,17 +37,23 @@ export default class UserBusiness {
 
     const saltRounds: number = 10;
     const hashedPassword: string = await bcrypt.hash(password, saltRounds);
-    const sql: string = "INSERT INTO users(name, password) VALUES(?, ?)";
-    const placeholders = [username, hashedPassword];
+    const sql: string = "INSERT INTO users(name, password, last_password_change) VALUES(?, ?, ?)";
+    const now = moment.parseZone(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    const placeholders = [username, hashedPassword, now];
+    let sqlResult: any;
 
     try {
-      await ConnectionHelper.performQuery(sql, placeholders);
+      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
         throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
       } else {
         throw new BusinessError(500, "Une erreur est survenue.");
       }
+    }
+
+    if (sqlResult.affectedRows === 0) {
+      throw new BusinessError(500, "Une erreur est survenue.");
     }
   }
 
@@ -57,13 +64,13 @@ export default class UserBusiness {
 
     const saltRounds: number = 10;
     const hashedPassword: string = await bcrypt.hash(password, saltRounds);
-    const sql: string = "UPDATE users SET name = ?, password = ? WHERE id = ?";
-    const placeholders: string[] = [username, hashedPassword, authUserId.toString()];
+    const sql: string = "UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?";
+    const now = moment.parseZone(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    const placeholders: string[] = [username, hashedPassword, now, authUserId.toString()];
     let sqlResult: any;
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
-      await UserBusiness.removeTokens(authUserId);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
         throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
@@ -83,8 +90,7 @@ export default class UserBusiness {
     let sqlResult: any;
 
     try {
-      await CardBusiness.removeUserCards(authUserId);
-      await UserBusiness.removeTokens(authUserId);
+      // await CardBusiness.removeUserCards(authUserId);
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       throw new BusinessError(500, "Une erreur est survenue.");
