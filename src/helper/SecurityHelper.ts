@@ -1,6 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 import ConnectionHelper from "./ConnectionHelper";
+import StatusMsgError from "../errors/StatusMsgError";
 
 export default class SecurityHelper {
   static async generateToken(username: string, userId: number): Promise<string> {
@@ -11,13 +12,16 @@ export default class SecurityHelper {
     });
 
     // generate the payload
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
+    const generationDate = new Date();
+
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 30);
 
     const payload = JSON.stringify({
       username: username,
       userId: userId,
-      expirationDate: date,
+      generationDate: generationDate,
+      expirationDate: expirationDate,
     });
 
     // cypher the payload
@@ -33,15 +37,6 @@ export default class SecurityHelper {
     const encodedPayload = Buffer.from(payload).toString("base64");
     const token = `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
 
-    // store the token in the database
-    const sql: string = "INSERT INTO tokens(content, user_id) VALUES(?, ?)";
-    const placeholders: string[] = [token, userId.toString()];
-    const sqlResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-
-    if (sqlResult.affectedRows === 0) {
-      throw new Error("Une erreur est survenue.");
-    }
-
     return token;
   }
 
@@ -55,10 +50,10 @@ export default class SecurityHelper {
     const payload = JSON.parse(stringPayload);
 
     const expirationDate: Date = new Date(payload.expirationDate);
-    const today: Date = new Date();
+    const now: Date = new Date();
 
-    if (header.typ !== "AWT" || expirationDate < today) {
-      throw new Error("Token invalide.");
+    if (header.typ !== "AWT" || expirationDate < now) {
+      throw new StatusMsgError(401, "Invalid token.");
     }
 
     // Get the public key
@@ -71,23 +66,29 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, "base64")) {
-      throw new Error("Token invalide.");
+      throw new StatusMsgError(401, "Invalid token.");
     }
-    // verify that the user didn't change password or unsubscribed
-    const sql: string = "SELECT id FROM tokens WHERE content = ? AND user_id = ?";
-    const placeholders: string[] = [token, payload.userId];
-    let sqlResult: any[];
+
+    // verify that the user still exists and didn't change the password
+    const sql: string = "SELECT last_password_change FROM users WHERE id = ?";
+    const placeholders: string[] = [payload.userId];
+    let sqlResult: any;
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new Error("Une erreur est survenue.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
 
-    if (sqlResult.length === 0) {
-      throw new Error("0 token trouvé.");
+    if (sqlResult.length === 1) {
+      const generationDate: Date = new Date(payload.generationDate);
+      const lastPasswordChange: Date = new Date(sqlResult[0].last_password_change);
+
+      if (generationDate > lastPasswordChange) {
+        return payload.userId;
+      }
     }
 
-    return payload.userId;
+    throw new StatusMsgError(401, "Invalid token");
   }
 }
