@@ -102,7 +102,7 @@ app.delete("/user", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "User deleted" };
+  body = { success: "Your account was successfully deleted." };
   res.status(httpCode).json(body);
 });
 

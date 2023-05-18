@@ -96,7 +96,7 @@ export default class UserBusiness {
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(404, "Unknown user.");
+      throw new StatusMsgError(404, "This account was not found.");
     }
   }
 }
