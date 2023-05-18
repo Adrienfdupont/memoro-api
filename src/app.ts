@@ -111,7 +111,7 @@ app.get("/cards", async (req, res) => {
 
   try {
     cards = await CardBusiness.getCards(authUserId);
-    body = cards;
+    body = { cards: cards };
   } catch (err) {
     if (err instanceof StatusMsgError) {
       httpCode = err.status;
