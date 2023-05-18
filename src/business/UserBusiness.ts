@@ -99,20 +99,4 @@ export default class UserBusiness {
       throw new BusinessError(404, "Unknown user.");
     }
   }
-
-  static async removeTokens(userId: number): Promise<void> {
-    const sql: string = "DELETE FROM tokens WHERE user_id = ?";
-    const placeholders: string[] = [userId.toString()];
-    let sqlResult: any;
-
-    try {
-      sqlResult = ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new BusinessError(500, "Internal server error.");
-    }
-
-    if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(404, "Aucun token pour cet utilisateur.");
-    }
-  }
 }
