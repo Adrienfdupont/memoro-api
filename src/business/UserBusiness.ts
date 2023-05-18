@@ -8,7 +8,7 @@ import moment from "moment";
 export default class UserBusiness {
   static async login(username: string, password: string): Promise<string> {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Veuillez remplir les champs.");
+      throw new BusinessError(401, "Please fill in the fields.");
     }
 
     const sql: string = "SELECT * FROM users WHERE name = ?";
@@ -18,11 +18,11 @@ export default class UserBusiness {
     try {
       queryUsers = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new BusinessError(500, "Internal server error.");
     }
 
     if (queryUsers.length === 0 || !(await bcrypt.compare(password, queryUsers[0].password))) {
-      throw new BusinessError(401, "Nom d'utilisateur ou mot de passe incorrect.");
+      throw new BusinessError(401, "Username or password incorrect.");
     }
 
     const token: string = await SecurityHelper.generateToken(username, queryUsers[0].id);
@@ -31,7 +31,7 @@ export default class UserBusiness {
 
   static async register(username: string, password: string): Promise<void> {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Veuillez remplir les champs.");
+      throw new BusinessError(401, "Please fill in the fields.");
     }
 
     const saltRounds: number = 10;
@@ -45,20 +45,20 @@ export default class UserBusiness {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
+        throw new BusinessError(409, "This username is already used.");
       } else {
-        throw new BusinessError(500, "Une erreur est survenue.");
+        throw new BusinessError(500, "Internal server error.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new BusinessError(500, "Internal server error.");
     }
   }
 
   static async updateUser(username: string, password: string, authUserId: number) {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Veuillez remplir les champs.");
+      throw new BusinessError(401, "Please fill in the fields.");
     }
 
     const saltRounds: number = 10;
@@ -72,14 +72,14 @@ export default class UserBusiness {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "Ce nom d'utilisateur est déjà utilisé.");
+        throw new BusinessError(409, "This username is already used.");
       } else {
-        throw new BusinessError(500, "Une erreur est survenue.");
+        throw new BusinessError(500, "Internal server error.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new BusinessError(500, "Internal server error.");
     }
   }
 
@@ -92,11 +92,11 @@ export default class UserBusiness {
       // await CardBusiness.removeUserCards(authUserId);
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new BusinessError(500, "Internal server error.");
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(404, "Utilisateur non existant.");
+      throw new BusinessError(404, "Unknown user.");
     }
   }
 
@@ -108,7 +108,7 @@ export default class UserBusiness {
     try {
       sqlResult = ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new BusinessError(500, "Internal server error.");
     }
 
     if (sqlResult.affectedRows === 0) {

@@ -14,12 +14,12 @@ ConnectionHelper.createPool();
 
 let authUserId: number;
 let httpCode: number = 500;
-let body: Object = { error: "Une erreur est survenue." };
+let body: Object = { error: "Internal server error." };
 
 // ---------------------------------- routes ----------------------------------
 
 app.get("/", (req, res) => {
-  res.send("L'API fonctionne !");
+  res.send("The API is working !");
 });
 
 app.post("/login", async (req, res) => {
@@ -48,7 +48,7 @@ app.post("/user", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "Vous avez bien été inscrit(e)." };
+  body = { success: "You have been successfully registered." };
   res.status(httpCode).json(body);
 });
 
@@ -70,7 +70,7 @@ async function middleware(req: Request, res: Response, next: NextFunction) {
     }
   } else {
     httpCode = 401;
-    body = { error: "Token invalide." };
+    body = { error: "Invalid token." };
     res.status(httpCode).json(body);
   }
 }
@@ -86,7 +86,7 @@ app.put("/user", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "Vos informations ont bien été modifiées." };
+  body = { success: "Your information has been successfully updated." };
   res.status(httpCode).json(body);
 });
 
@@ -100,7 +100,7 @@ app.delete("/user", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "Utilisateur supprimé." };
+  body = { success: "User deleted" };
   res.status(httpCode).json(body);
 });
 
@@ -147,7 +147,7 @@ app.post("/card", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "La carte a bien été ajoutée." };
+  body = { success: "The card was successfully added." };
   res.status(httpCode).json(body);
 });
 
@@ -163,7 +163,7 @@ app.put("/card/:id", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "La carte a bien été modifiée" };
+  body = { success: "The card was succesfully updated." };
   res.status(httpCode).json(body);
 });
 
@@ -179,8 +179,8 @@ app.delete("/card/:id", async (req, res) => {
     }
   }
   httpCode = 200;
-  body = { success: "La carte a bien été supprimée." };
+  body = { success: "The card was successfuly deleted." };
   res.status(httpCode).json(body);
 });
 
-app.listen(port, () => console.log("Serveur démarré"));
+app.listen(port, () => console.log("Server started"));

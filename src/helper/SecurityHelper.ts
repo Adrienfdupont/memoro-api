@@ -52,7 +52,7 @@ export default class SecurityHelper {
     const now: Date = new Date();
 
     if (header.typ !== "AWT" || expirationDate < now) {
-      throw new Error("Token invalide.");
+      throw new Error("Invalid token.");
     }
 
     // Get the public key
@@ -65,7 +65,7 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, "base64")) {
-      throw new Error("Token invalide.");
+      throw new Error("Invalid token.");
     }
 
     // verify that the user still exists and didn't change the password
@@ -76,7 +76,7 @@ export default class SecurityHelper {
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new Error("Une erreur est survenue");
+      throw new Error("Internal server error.");
     }
 
     if (sqlResult.length === 1) {
@@ -88,6 +88,6 @@ export default class SecurityHelper {
       }
     }
 
-    throw new Error("Token invalide");
+    throw new Error("Invalid token");
   }
 }
