@@ -1,6 +1,6 @@
 import ConnectionHelper from "../helper/ConnectionHelper";
 import Card from "../types/Card";
-import BusinessError from "../errors/BusinessError";
+import StatusMsgError from "../errors/StatusMsgError";
 import { SqlError } from "mariadb";
 
 export default class CardBusiness {
@@ -13,7 +13,7 @@ export default class CardBusiness {
     try {
       queryCards = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new StatusMsgError(500, "Une erreur est survenue.");
     }
 
     cards = queryCards.map((result) => {
@@ -36,11 +36,11 @@ export default class CardBusiness {
     try {
       queryCard = await ConnectionHelper.performQuery(sql, placeholder);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new StatusMsgError(500, "Une erreur est survenue.");
     }
 
     if (queryCard.length === 0) {
-      throw new BusinessError(404, "Aucune carte trouvée");
+      throw new StatusMsgError(404, "Aucune carte trouvée");
     }
 
     const card: Card = {
@@ -59,19 +59,19 @@ export default class CardBusiness {
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new BusinessError(400, "Veuillez fournir un label et sa traduction.");
+      throw new StatusMsgError(400, "Veuillez fournir un label et sa traduction.");
     }
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "Vous possédez déjà une carte avec ce label.");
+        throw new StatusMsgError(409, "Vous possédez déjà une carte avec ce label.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new StatusMsgError(500, "Une erreur est survenue.");
     }
   }
 
@@ -81,19 +81,19 @@ export default class CardBusiness {
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new BusinessError(400, "Veuillez fournir un label et sa traduction.");
+      throw new StatusMsgError(400, "Veuillez fournir un label et sa traduction.");
     }
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "Vous possédez déjà une carte avec ce label.");
+        throw new StatusMsgError(409, "Vous possédez déjà une carte avec ce label.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(404, "Aucune carte trouvée.");
+      throw new StatusMsgError(404, "Aucune carte trouvée.");
     }
   }
 
@@ -105,11 +105,11 @@ export default class CardBusiness {
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new StatusMsgError(500, "Une erreur est survenue.");
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(404, "Aucune carte trouvée.");
+      throw new StatusMsgError(404, "Aucune carte trouvée.");
     }
   }
 
@@ -120,7 +120,7 @@ export default class CardBusiness {
     try {
       await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Une erreur est survenue.");
+      throw new StatusMsgError(500, "Une erreur est survenue.");
     }
   }
 }

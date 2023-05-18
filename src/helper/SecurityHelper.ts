@@ -1,6 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 import ConnectionHelper from "./ConnectionHelper";
+import StatusMsgError from "../errors/StatusMsgError";
 
 export default class SecurityHelper {
   static async generateToken(username: string, userId: number): Promise<string> {
@@ -52,7 +53,7 @@ export default class SecurityHelper {
     const now: Date = new Date();
 
     if (header.typ !== "AWT" || expirationDate < now) {
-      throw new Error("Invalid token.");
+      throw new StatusMsgError(401, "Invalid token.");
     }
 
     // Get the public key
@@ -65,7 +66,7 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, "base64")) {
-      throw new Error("Invalid token.");
+      throw new StatusMsgError(401, "Invalid token.");
     }
 
     // verify that the user still exists and didn't change the password
@@ -76,7 +77,7 @@ export default class SecurityHelper {
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new Error("Internal server error.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
 
     if (sqlResult.length === 1) {
@@ -88,6 +89,6 @@ export default class SecurityHelper {
       }
     }
 
-    throw new Error("Invalid token");
+    throw new StatusMsgError(401, "Invalid token");
   }
 }

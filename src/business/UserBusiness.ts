@@ -1,14 +1,14 @@
 import ConnectionHelper from "../helper/ConnectionHelper";
 import bcrypt from "bcrypt";
 import SecurityHelper from "../helper/SecurityHelper";
-import BusinessError from "../errors/BusinessError";
+import StatusMsgError from "../errors/StatusMsgError";
 import { SqlError } from "mariadb";
 import moment from "moment";
 
 export default class UserBusiness {
   static async login(username: string, password: string): Promise<string> {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Please fill in the fields.");
+      throw new StatusMsgError(401, "Please fill in the fields.");
     }
 
     const sql: string = "SELECT * FROM users WHERE name = ?";
@@ -18,11 +18,11 @@ export default class UserBusiness {
     try {
       queryUsers = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Internal server error.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
 
     if (queryUsers.length === 0 || !(await bcrypt.compare(password, queryUsers[0].password))) {
-      throw new BusinessError(401, "Username or password incorrect.");
+      throw new StatusMsgError(401, "Username or password incorrect.");
     }
 
     const token: string = await SecurityHelper.generateToken(username, queryUsers[0].id);
@@ -31,7 +31,7 @@ export default class UserBusiness {
 
   static async register(username: string, password: string): Promise<void> {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Please fill in the fields.");
+      throw new StatusMsgError(401, "Please fill in the fields.");
     }
 
     const saltRounds: number = 10;
@@ -45,20 +45,20 @@ export default class UserBusiness {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "This username is already used.");
+        throw new StatusMsgError(409, "This username is already used.");
       } else {
-        throw new BusinessError(500, "Internal server error.");
+        throw new StatusMsgError(500, "Internal server error.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(500, "Internal server error.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
   }
 
   static async updateUser(username: string, password: string, authUserId: number) {
     if (username.length === 0 || password.length === 0) {
-      throw new BusinessError(401, "Please fill in the fields.");
+      throw new StatusMsgError(401, "Please fill in the fields.");
     }
 
     const saltRounds: number = 10;
@@ -72,14 +72,14 @@ export default class UserBusiness {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, "This username is already used.");
+        throw new StatusMsgError(409, "This username is already used.");
       } else {
-        throw new BusinessError(500, "Internal server error.");
+        throw new StatusMsgError(500, "Internal server error.");
       }
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(500, "Internal server error.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
   }
 
@@ -92,11 +92,11 @@ export default class UserBusiness {
       // await CardBusiness.removeUserCards(authUserId);
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new BusinessError(500, "Internal server error.");
+      throw new StatusMsgError(500, "Internal server error.");
     }
 
     if (sqlResult.affectedRows === 0) {
-      throw new BusinessError(404, "Unknown user.");
+      throw new StatusMsgError(404, "Unknown user.");
     }
   }
 }

@@ -1,9 +1,9 @@
-export default class BusinessError extends Error {
+export default class StatusMsgError extends Error {
   status: number;
 
   constructor(status: number, message: string) {
     super(message);
-    this.name = "BusinessError";
+    this.name = "StatusMsgError";
     this.status = status;
   }
 }

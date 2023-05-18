@@ -5,7 +5,7 @@ import UserBusiness from "./business/UserBusiness";
 import SecurityHelper from "./helper/SecurityHelper";
 import CardBusiness from "./business/CardBusiness";
 import Card from "./types/Card";
-import BusinessError from "./errors/BusinessError";
+import StatusMsgError from "./errors/StatusMsgError";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -19,7 +19,9 @@ let body: Object = { error: "Internal server error." };
 // ---------------------------------- routes ----------------------------------
 
 app.get("/", (req, res) => {
-  res.send("The API is working !");
+  httpCode = 200;
+  body = { success: "The API is working !" };
+  res.status(httpCode).json(body);
 });
 
 app.post("/login", async (req, res) => {
@@ -29,7 +31,7 @@ app.post("/login", async (req, res) => {
     token = await UserBusiness.login(req.body.username, req.body.password);
     body = { token: token };
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -42,7 +44,7 @@ app.post("/user", async (req, res) => {
   try {
     await UserBusiness.register(req.body.username, req.body.password);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -63,7 +65,7 @@ async function middleware(req: Request, res: Response, next: NextFunction) {
       next();
     } catch (err) {
       httpCode = 401;
-      if (err instanceof Error) {
+      if (err instanceof StatusMsgError) {
         body = { error: err.message };
       }
       res.status(httpCode).json(body);
@@ -80,7 +82,7 @@ app.put("/user", async (req, res) => {
   try {
     await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -94,7 +96,7 @@ app.delete("/user", async (req, res) => {
   try {
     await UserBusiness.removeUser(authUserId);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -111,7 +113,7 @@ app.get("/cards", async (req, res) => {
     cards = await CardBusiness.getCards(authUserId);
     body = cards;
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -128,7 +130,7 @@ app.get("/card/:id", async (req, res) => {
     card = await CardBusiness.getCard(cardId);
     body = { card: card };
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -141,7 +143,7 @@ app.post("/card", async (req, res) => {
   try {
     await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -157,7 +159,7 @@ app.put("/card/:id", async (req, res) => {
   try {
     await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -173,7 +175,7 @@ app.delete("/card/:id", async (req, res) => {
   try {
     await CardBusiness.removeCard(cardId, authUserId);
   } catch (err) {
-    if (err instanceof BusinessError) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
