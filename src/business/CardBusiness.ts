@@ -109,6 +109,8 @@ export default class CardBusiness {
     }
 
     if (sqlResult.affectedRows === 0) {
+      console.log(sqlResult);
+
       throw new StatusMsgError(404, "This card was not found.");
     }
   }
