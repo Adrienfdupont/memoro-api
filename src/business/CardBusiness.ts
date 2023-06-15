@@ -59,7 +59,7 @@ export default class CardBusiness {
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a username and a password.");
+      throw new StatusMsgError(400, "Please provide a label and a translation.");
     }
 
     try {
@@ -81,7 +81,7 @@ export default class CardBusiness {
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a username and a password.");
+      throw new StatusMsgError(400, "Please provide a label and a translation.");
     }
 
     try {
