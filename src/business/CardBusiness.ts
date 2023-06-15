@@ -53,20 +53,31 @@ export default class CardBusiness {
     return card;
   }
 
-  static async addCard(label: string, translation: string, userId: number): Promise<void> {
-    const sql: string = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
+  static async addCard(
+    label: string,
+    translation: string,
+    userId: number
+  ): Promise<void> {
+    const sql: string =
+      "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
     const placeholders: string[] = [label, translation, userId.toString()];
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a username and a password.");
+      throw new StatusMsgError(
+        400,
+        "Please provide a label and a translation."
+      );
     }
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "You already own a card with this label.");
+        throw new StatusMsgError(
+          409,
+          "You already own a card with this label."
+        );
       }
     }
 
@@ -75,20 +86,37 @@ export default class CardBusiness {
     }
   }
 
-  static async updateCard(cardId: string, label: string, translation: string, authUserId: number): Promise<void> {
-    const sql: string = "UPDATE cards SET label = ?, translation = ? WHERE id = ? AND user_id = ?";
-    const placeholders: string[] = [label, translation, cardId, authUserId.toString()];
+  static async updateCard(
+    cardId: string,
+    label: string,
+    translation: string,
+    authUserId: number
+  ): Promise<void> {
+    const sql: string =
+      "UPDATE cards SET label = ?, translation = ? WHERE id = ? AND user_id = ?";
+    const placeholders: string[] = [
+      label,
+      translation,
+      cardId,
+      authUserId.toString(),
+    ];
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a username and a password.");
+      throw new StatusMsgError(
+        400,
+        "Please provide a label and a translation."
+      );
     }
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "You already own a card with this label.");
+        throw new StatusMsgError(
+          409,
+          "You already own a card with this label."
+        );
       }
     }
 
