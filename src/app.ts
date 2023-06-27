@@ -6,6 +6,8 @@ import SecurityHelper from "./helper/SecurityHelper";
 import CardBusiness from "./business/CardBusiness";
 import Card from "./types/Card";
 import StatusMsgError from "./errors/StatusMsgError";
+import CollectionBusiness from "./business/CollectionBusiness";
+import Collection from "./types/Collection";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -106,6 +108,20 @@ app.delete("/user", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
+app.post("/card", async (req, res) => {
+  try {
+    await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
+    httpCode = 200;
+    body = { success: "The card was successfully added." };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
 app.get("/cards", async (req, res) => {
   let cards: Card[];
 
@@ -130,20 +146,6 @@ app.get("/card/:id", async (req, res) => {
     httpCode = 200;
     card = await CardBusiness.getCard(cardId);
     body = { card: card };
-  } catch (err) {
-    if (err instanceof StatusMsgError) {
-      httpCode = err.status;
-      body = { error: err.message };
-    }
-  }
-  res.status(httpCode).json(body);
-});
-
-app.post("/card", async (req, res) => {
-  try {
-    await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
-    httpCode = 200;
-    body = { success: "The card was successfully added." };
   } catch (err) {
     if (err instanceof StatusMsgError) {
       httpCode = err.status;
@@ -178,8 +180,83 @@ app.delete("/card/:id", async (req, res) => {
     body = { success: "The card was successfuly deleted." };
   } catch (err) {
     if (err instanceof StatusMsgError) {
-      console.log(err.message);
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
 
+app.post("/collection", async (req, res) => {
+  try {
+    await CollectionBusiness.addCollection(req.body.name, authUserId);
+    httpCode = 200;
+    body = { success: "The collection was successfully added." };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.get("/collections", async (req, res) => {
+  let collections: Collection[];
+  try {
+    collections = await CollectionBusiness.getCollections(authUserId);
+    httpCode = 200;
+    body = { collections: collections };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.get("/collection/:id", async (req, res) => {
+  const collectionId = req.params.id;
+  let collection: Collection;
+  try {
+    collection = await CollectionBusiness.getCollection(collectionId);
+    httpCode = 200;
+    body = { collection: collection };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.put("/collection/:id", async (req, res) => {
+  const collectionId = req.params.id;
+
+  try {
+    await CollectionBusiness.updateCollection(collectionId, req.body.name);
+    httpCode = 200;
+    body = { success: "The collection was succesfully updated." };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
+      httpCode = err.status;
+      body = { error: err.message };
+    }
+  }
+  res.status(httpCode).json(body);
+});
+
+app.delete("/collection/:id", async (req, res) => {
+  const collectionId = req.params.id;
+
+  try {
+    await CollectionBusiness.removeCollection(collectionId);
+    httpCode = 200;
+    body = { success: "The collection was successfuly deleted." };
+  } catch (err) {
+    if (err instanceof StatusMsgError) {
       httpCode = err.status;
       body = { error: err.message };
     }
