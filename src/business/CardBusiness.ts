@@ -4,9 +4,9 @@ import StatusMsgError from "../errors/StatusMsgError";
 import { SqlError } from "mariadb";
 
 export default class CardBusiness {
-  static async getCards(userId: number): Promise<Card[]> {
-    const sql: string = "SELECT * FROM cards WHERE user_id = ?";
-    const placeholders: string[] = [userId.toString()];
+  static async getCards(collectionId: number): Promise<Card[]> {
+    const sql = "SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?";
+    const placeholders = [collectionId.toString()];
     let cards: Card[];
     let queryCards: any[];
 
@@ -21,7 +21,7 @@ export default class CardBusiness {
         id: result.id,
         label: result.label,
         translation: result.translation,
-        userId: result.user_id,
+        collectionId: result.collection_id,
       };
     });
 
@@ -29,9 +29,10 @@ export default class CardBusiness {
   }
 
   static async getCard(cardId: string): Promise<Card> {
-    const sql: string = "SELECT * FROM cards WHERE id = ?";
-    const placeholder: string[] = [cardId];
+    const sql = "SELECT * FROM cards WHERE id = ?";
+    const placeholder = [cardId];
     let queryCard: any[];
+    let card: Card;
 
     try {
       queryCard = await ConnectionHelper.performQuery(sql, placeholder);
@@ -43,19 +44,19 @@ export default class CardBusiness {
       throw new StatusMsgError(404, "This card was not found.");
     }
 
-    const card: Card = {
+    card = {
       id: queryCard[0].id,
       label: queryCard[0].label,
       translation: queryCard[0].translation,
-      userId: queryCard[0].user_id,
+      collectionId: queryCard[0].collection_id,
     };
 
     return card;
   }
 
-  static async addCard(label: string, translation: string, userId: number): Promise<void> {
-    const sql: string = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
-    const placeholders: string[] = [label, translation, userId.toString()];
+  static async addCard(label: string, translation: string, collectionId: number): Promise<void> {
+    const sql = "INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)";
+    const placeholders = [label, translation, collectionId.toString()];
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
@@ -75,9 +76,9 @@ export default class CardBusiness {
     }
   }
 
-  static async updateCard(cardId: string, label: string, translation: string, authUserId: number): Promise<void> {
-    const sql: string = "UPDATE cards SET label = ?, translation = ? WHERE id = ? AND user_id = ?";
-    const placeholders: string[] = [label, translation, cardId, authUserId.toString()];
+  static async updateCard(cardId: string, label: string, translation: string, collectionId: number): Promise<void> {
+    const sql = "UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?";
+    const placeholders = [label, translation, collectionId.toString(), cardId];
     let sqlResult: any;
 
     if (label.length === 0 || translation.length === 0) {
@@ -97,9 +98,9 @@ export default class CardBusiness {
     }
   }
 
-  static async removeCard(cardId: string, authUserId: number): Promise<void> {
-    const sql: string = "DELETE FROM cards WHERE id = ? AND user_id = ?";
-    const placeholders: string[] = [cardId, authUserId.toString()];
+  static async removeCard(cardId: string): Promise<void> {
+    const sql = "DELETE FROM cards WHERE id = ?";
+    const placeholders = [cardId];
     let sqlResult: any;
 
     try {
@@ -110,17 +111,6 @@ export default class CardBusiness {
 
     if (sqlResult.affectedRows === 0) {
       throw new StatusMsgError(404, "This card was not found.");
-    }
-  }
-
-  static async removeUserCards(userId: number): Promise<void> {
-    const sql: string = "DELETE FROM cards WHERE user_id = ?";
-    const placeholders: string[] = [userId.toString()];
-
-    try {
-      await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
     }
   }
 }

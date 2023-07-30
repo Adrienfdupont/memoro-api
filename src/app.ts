@@ -110,7 +110,7 @@ app.delete("/user", async (req, res) => {
 
 app.post("/card", async (req, res) => {
   try {
-    await CardBusiness.addCard(req.body.label, req.body.translation, authUserId);
+    await CardBusiness.addCard(req.body.label, req.body.translation, req.body.collectionId);
     httpCode = 200;
     body = { success: "The card was successfully added." };
   } catch (err) {
@@ -122,11 +122,12 @@ app.post("/card", async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get("/cards", async (req, res) => {
+app.get("/cards/:collectionId", async (req, res) => {
   let cards: Card[];
+  const collectionId = req.params.collectionId;
 
   try {
-    cards = await CardBusiness.getCards(authUserId);
+    cards = await CardBusiness.getCards(parseInt(collectionId));
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
@@ -139,7 +140,7 @@ app.get("/cards", async (req, res) => {
 });
 
 app.get("/card/:id", async (req, res) => {
-  const cardId: string = req.params.id;
+  const cardId = req.params.id;
   let card: Card;
 
   try {
@@ -156,10 +157,9 @@ app.get("/card/:id", async (req, res) => {
 });
 
 app.put("/card/:id", async (req, res) => {
-  const cardId: string = req.params.id;
-
+  const cardId = req.params.id;
   try {
-    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, authUserId);
+    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, req.body.collectionId);
     httpCode = 200;
     body = { success: "The card was succesfully updated." };
   } catch (err) {
@@ -175,7 +175,7 @@ app.delete("/card/:id", async (req, res) => {
   const cardId: string = req.params.id;
 
   try {
-    await CardBusiness.removeCard(cardId, authUserId);
+    await CardBusiness.removeCard(cardId);
     httpCode = 200;
     body = { success: "The card was successfuly deleted." };
   } catch (err) {

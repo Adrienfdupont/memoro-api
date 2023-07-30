@@ -23,7 +23,7 @@ export default class CollectionBusiness {
   }
 
   static async getCollections(authUserId: number): Promise<Collection[]> {
-    const sql = "SELECT collections.* FROM collections INNER JOIN users ON collections.user_id = users.id";
+    const sql = "SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id";
     const placeholders = [authUserId.toString()];
     const queryResults: any[] = await ConnectionHelper.performQuery(sql, placeholders);
 
