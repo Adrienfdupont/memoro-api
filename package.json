@@ -1,8 +1,8 @@
 {
-  "name": "easy-learn",
-  "version": "1.0.0",
+  "name": "memoro-api",
+  "version": "2.0.0",
   "description": "",
-  "main": "main.ts",
+  "main": "app.ts",
   "scripts": {
     "start": "nodemon --watch src -e ts --exec ts-node src/app.ts",
     "prod": "ts-node src/app.ts"
