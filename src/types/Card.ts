@@ -1,6 +1,6 @@
 export default interface Card {
-    id: number;
-    label: string,
-    translation: string,
-    userId: number,
+  id: number;
+  label: string;
+  translation: string;
+  collectionId: number;
 }

@@ -1,27 +1,23 @@
-import ConnectionHelper from "../helper/ConnectionHelper";
-import Card from "../types/Card";
-import StatusMsgError from "../errors/StatusMsgError";
-import { SqlError } from "mariadb";
+import ConnectionHelper from '../helper/ConnectionHelper';
+import Card from '../types/Card';
+import BusinessError from '../errors/BusinessError';
+import { SqlError } from 'mariadb';
 
 export default class CardBusiness {
-  static async getCards(userId: number): Promise<Card[]> {
-    const sql: string = "SELECT * FROM cards WHERE user_id = ?";
-    const placeholders: string[] = [userId.toString()];
+  static async getCards(collectionId: number): Promise<Card[]> {
+    const sql = 'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
+    const placeholders = [collectionId.toString()];
     let cards: Card[];
-    let queryCards: any[];
+    let queryResult: any[];
 
-    try {
-      queryCards = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
-    }
+    queryResult = await ConnectionHelper.performQuery(sql, placeholders);
 
-    cards = queryCards.map((result) => {
+    cards = queryResult.map((result) => {
       return {
         id: result.id,
         label: result.label,
         translation: result.translation,
-        userId: result.user_id,
+        collectionId: result.collection_id,
       };
     });
 
@@ -29,98 +25,80 @@ export default class CardBusiness {
   }
 
   static async getCard(cardId: string): Promise<Card> {
-    const sql: string = "SELECT * FROM cards WHERE id = ?";
-    const placeholder: string[] = [cardId];
-    let queryCard: any[];
+    const sql = 'SELECT * FROM cards WHERE id = ?';
+    const placeholder = [cardId];
+    let queryResult: any[];
+    let card: Card;
 
-    try {
-      queryCard = await ConnectionHelper.performQuery(sql, placeholder);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
+    queryResult = await ConnectionHelper.performQuery(sql, placeholder);
+
+    if (queryResult.length === 0) {
+      throw new BusinessError(404, 'This card was not found.');
     }
 
-    if (queryCard.length === 0) {
-      throw new StatusMsgError(404, "This card was not found.");
-    }
-
-    const card: Card = {
-      id: queryCard[0].id,
-      label: queryCard[0].label,
-      translation: queryCard[0].translation,
-      userId: queryCard[0].user_id,
+    card = {
+      id: queryResult[0].id,
+      label: queryResult[0].label,
+      translation: queryResult[0].translation,
+      collectionId: queryResult[0].collection_id,
     };
 
     return card;
   }
 
-  static async addCard(label: string, translation: string, userId: number): Promise<void> {
-    const sql: string = "INSERT INTO cards(label, translation, user_id) VALUES(?, ?, ?)";
-    const placeholders: string[] = [label, translation, userId.toString()];
-    let sqlResult: any;
+  static async addCard(label: string, translation: string, collectionId: number): Promise<void> {
+    const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
+    const placeholders = [label, translation, collectionId.toString()];
+    let queryResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a label and a translation.");
+      throw new BusinessError(400, 'Please provide a label and a translation.');
     }
 
     try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "You already own a card with this label.");
+        throw new BusinessError(409, 'You already own a card with this label.');
       }
     }
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(500, "Internal server error.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 
-  static async updateCard(cardId: string, label: string, translation: string, authUserId: number): Promise<void> {
-    const sql: string = "UPDATE cards SET label = ?, translation = ? WHERE id = ? AND user_id = ?";
-    const placeholders: string[] = [label, translation, cardId, authUserId.toString()];
-    let sqlResult: any;
+  static async updateCard(cardId: string, label: string, translation: string, collectionId: number): Promise<void> {
+    const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
+    const placeholders = [label, translation, collectionId.toString(), cardId];
+    let queryResult: any;
 
     if (label.length === 0 || translation.length === 0) {
-      throw new StatusMsgError(400, "Please provide a label and a translation.");
+      throw new BusinessError(400, 'Please provide a label and a translation.');
     }
 
     try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "You already own a card with this label.");
+        throw new BusinessError(409, 'You already own a card with this label.');
       }
     }
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(404, "This card was not found.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 
-  static async removeCard(cardId: string, authUserId: number): Promise<void> {
-    const sql: string = "DELETE FROM cards WHERE id = ? AND user_id = ?";
-    const placeholders: string[] = [cardId, authUserId.toString()];
-    let sqlResult: any;
+  static async removeCard(cardId: string): Promise<void> {
+    const sql = 'DELETE FROM cards WHERE id = ?';
+    const placeholders = [cardId];
+    let queryResult: any;
 
-    try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
-    }
+    queryResult = await ConnectionHelper.performQuery(sql, placeholders);
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(404, "This card was not found.");
-    }
-  }
-
-  static async removeUserCards(userId: number): Promise<void> {
-    const sql: string = "DELETE FROM cards WHERE user_id = ?";
-    const placeholders: string[] = [userId.toString()];
-
-    try {
-      await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 }

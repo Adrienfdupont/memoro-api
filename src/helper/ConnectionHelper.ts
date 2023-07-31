@@ -1,6 +1,6 @@
-import mariadb, { Connection } from "mariadb";
-import { Pool } from "mariadb";
-import dotenv from "dotenv";
+import mariadb, { Connection } from 'mariadb';
+import { Pool } from 'mariadb';
+import dotenv from 'dotenv';
 dotenv.config();
 
 export default class ConnectionHelper {

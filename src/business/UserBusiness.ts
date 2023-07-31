@@ -1,102 +1,86 @@
-import ConnectionHelper from "../helper/ConnectionHelper";
-import bcrypt from "bcrypt";
-import SecurityHelper from "../helper/SecurityHelper";
-import StatusMsgError from "../errors/StatusMsgError";
-import { SqlError } from "mariadb";
-import moment from "moment";
+import ConnectionHelper from '../helper/ConnectionHelper';
+import bcrypt from 'bcrypt';
+import SecurityHelper from '../helper/SecurityHelper';
+import BusinessError from '../errors/BusinessError';
+import { SqlError } from 'mariadb';
+import moment from 'moment';
 
 export default class UserBusiness {
   static async login(username: string, password: string): Promise<string> {
     if (username.length === 0 || password.length === 0) {
-      throw new StatusMsgError(401, "Please fill in the fields.");
+      throw new BusinessError(401, 'Please fill in the fields.');
     }
 
-    const sql: string = "SELECT * FROM users WHERE name = ?";
-    const placeholders: string[] = [username];
+    const sql = 'SELECT * FROM users WHERE name = ?';
+    const placeholders = [username];
     let queryUsers: any[];
 
-    try {
-      queryUsers = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
-    }
+    queryUsers = await ConnectionHelper.performQuery(sql, placeholders);
 
     if (queryUsers.length === 0 || !(await bcrypt.compare(password, queryUsers[0].password))) {
-      throw new StatusMsgError(401, "Username or password incorrect.");
+      throw new BusinessError(401, 'Username or password incorrect.');
     }
 
-    const token: string = await SecurityHelper.generateToken(username, queryUsers[0].id);
-    return token;
+    return await SecurityHelper.generateToken(username, queryUsers[0].id);
   }
 
   static async register(username: string, password: string): Promise<void> {
     if (username.length === 0 || password.length === 0) {
-      throw new StatusMsgError(401, "Please fill in the fields.");
+      throw new BusinessError(401, 'Please fill in the fields.');
     }
 
-    const saltRounds: number = 10;
-    const hashedPassword: string = await bcrypt.hash(password, saltRounds);
-    const sql: string = "INSERT INTO users(name, password, last_password_change) VALUES(?, ?, ?)";
-    const now = moment.parseZone(new Date()).format("YYYY-MM-DD HH:mm:ss");
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users(name, password, last_password_change) VALUES(?, ?, ?)';
+    const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
     const placeholders = [username, hashedPassword, now];
-    let sqlResult: any;
+    let queryResult: any;
 
     try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "This username is already used.");
-      } else {
-        throw new StatusMsgError(500, "Internal server error.");
+        throw new BusinessError(409, 'This username is already used.');
       }
     }
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(500, "Internal server error.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 
   static async updateUser(username: string, password: string, authUserId: number) {
     if (username.length === 0 || password.length === 0) {
-      throw new StatusMsgError(401, "Please fill in the fields.");
+      throw new BusinessError(401, 'Please fill in the fields.');
     }
 
-    const saltRounds: number = 10;
-    const hashedPassword: string = await bcrypt.hash(password, saltRounds);
-    const sql: string = "UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?";
-    const now = moment.parseZone(new Date()).format("YYYY-MM-DD HH:mm:ss");
-    const placeholders: string[] = [username, hashedPassword, now, authUserId.toString()];
-    let sqlResult: any;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const sql = 'UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?';
+    const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
+    const placeholders = [username, hashedPassword, now, authUserId.toString()];
+    let queryResult: any;
 
     try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
+      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new StatusMsgError(409, "This username is already used.");
-      } else {
-        throw new StatusMsgError(500, "Internal server error.");
+        throw new BusinessError(409, 'This username is already used.');
       }
     }
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(500, "Internal server error.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 
   static async removeUser(authUserId: number): Promise<void> {
-    const sql: string = "DELETE FROM users WHERE id = ?";
-    const placeholders: string[] = [authUserId.toString()];
-    let sqlResult: any;
+    const sql = 'DELETE FROM users WHERE id = ?';
+    const placeholders = [authUserId.toString()];
+    let queryResult: any;
 
-    try {
-      // await CardBusiness.removeUserCards(authUserId);
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new StatusMsgError(500, "Internal server error.");
-    }
+    queryResult = await ConnectionHelper.performQuery(sql, placeholders);
 
-    if (sqlResult.affectedRows === 0) {
-      throw new StatusMsgError(404, "This account was not found.");
+    if (queryResult.affectedRows === 0) {
+      throw new BusinessError(500, 'The request could not be processed.');
     }
   }
 }
