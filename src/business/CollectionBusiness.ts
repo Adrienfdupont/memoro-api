@@ -23,7 +23,7 @@ export default class CollectionBusiness {
   }
 
   static async getCollections(authUserId: number): Promise<Collection[]> {
-    const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id';
+    const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
     const placeholders = [authUserId.toString()];
     let queryResults: any[];
     let collections: Collection[];
