@@ -123,7 +123,7 @@ app.post('/card', async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get('/cards/:collectionId', async (req, res) => {
+app.get('/cards/collection/:collectionId', async (req, res) => {
   let cards: Card[];
   const collectionId = req.params.collectionId;
 
@@ -202,7 +202,7 @@ app.post('/collection', async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get('/collections', async (req, res) => {
+app.get('/collections/user', async (req, res) => {
   let collections: Collection[];
   try {
     collections = await CollectionBusiness.getCollections(authUserId);
