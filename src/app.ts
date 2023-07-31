@@ -59,9 +59,10 @@ app.post("/user", async (req, res) => {
 // ---------- authentication necessary ------------
 
 async function middleware(req: Request, res: Response, next: NextFunction) {
-  const token: string | undefined = req.get("Authorization");
+  const bearer: string | undefined = req.headers.authorization;
 
-  if (token !== undefined) {
+  if (bearer !== undefined) {
+    const token = bearer.split(" ")[1];
     try {
       authUserId = await SecurityHelper.verifyToken(token);
       next();
