@@ -5,7 +5,7 @@ import UserBusiness from "./business/UserBusiness";
 import SecurityHelper from "./helper/SecurityHelper";
 import CardBusiness from "./business/CardBusiness";
 import Card from "./types/Card";
-import StatusMsgError from "./errors/StatusMsgError";
+import BusinessError from "./errors/BusinessError";
 import CollectionBusiness from "./business/CollectionBusiness";
 import Collection from "./types/Collection";
 
@@ -34,7 +34,7 @@ app.post("/login", async (req, res) => {
     httpCode = 200;
     body = { token: token };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -48,7 +48,7 @@ app.post("/user", async (req, res) => {
     httpCode = 200;
     body = { success: "You have been successfully registered." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -67,7 +67,7 @@ async function middleware(req: Request, res: Response, next: NextFunction) {
       next();
     } catch (err) {
       httpCode = 401;
-      if (err instanceof StatusMsgError) {
+      if (err instanceof BusinessError) {
         body = { error: err.message };
       }
       res.status(httpCode).json(body);
@@ -86,7 +86,7 @@ app.put("/user", async (req, res) => {
     httpCode = 200;
     body = { success: "Your information has been successfully updated." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -100,7 +100,7 @@ app.delete("/user", async (req, res) => {
     httpCode = 200;
     body = { success: "Your account was successfully deleted." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -114,7 +114,7 @@ app.post("/card", async (req, res) => {
     httpCode = 200;
     body = { success: "The card was successfully added." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -131,7 +131,7 @@ app.get("/cards/:collectionId", async (req, res) => {
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -148,7 +148,7 @@ app.get("/card/:id", async (req, res) => {
     card = await CardBusiness.getCard(cardId);
     body = { card: card };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -163,7 +163,7 @@ app.put("/card/:id", async (req, res) => {
     httpCode = 200;
     body = { success: "The card was succesfully updated." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -179,7 +179,7 @@ app.delete("/card/:id", async (req, res) => {
     httpCode = 200;
     body = { success: "The card was successfuly deleted." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -193,7 +193,7 @@ app.post("/collection", async (req, res) => {
     httpCode = 200;
     body = { success: "The collection was successfully added." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -208,7 +208,7 @@ app.get("/collections", async (req, res) => {
     httpCode = 200;
     body = { collections: collections };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -224,7 +224,7 @@ app.get("/collection/:id", async (req, res) => {
     httpCode = 200;
     body = { collection: collection };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -240,7 +240,7 @@ app.put("/collection/:id", async (req, res) => {
     httpCode = 200;
     body = { success: "The collection was succesfully updated." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }
@@ -256,7 +256,7 @@ app.delete("/collection/:id", async (req, res) => {
     httpCode = 200;
     body = { success: "The collection was successfuly deleted." };
   } catch (err) {
-    if (err instanceof StatusMsgError) {
+    if (err instanceof BusinessError) {
       httpCode = err.status;
       body = { error: err.message };
     }

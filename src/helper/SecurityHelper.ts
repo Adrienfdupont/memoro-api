@@ -1,7 +1,7 @@
 import fs from "fs";
 import crypto from "crypto";
 import ConnectionHelper from "./ConnectionHelper";
-import StatusMsgError from "../errors/StatusMsgError";
+import StatusMsgError from "../errors/BusinessError";
 
 export default class SecurityHelper {
   static async generateToken(username: string, userId: number): Promise<string> {
