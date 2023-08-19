@@ -37,7 +37,7 @@ app.post('/login', async (req, res) => {
   let token: string | null;
 
   try {
-    token = await UserBusiness.login(req.body.username, req.body.password);
+    token = await UserBusiness.login(req.body.name, req.body.password);
     httpCode = 200;
     body = { token: token };
   } catch (err) {
@@ -51,7 +51,7 @@ app.post('/login', async (req, res) => {
 
 app.post('/user', async (req, res) => {
   try {
-    await UserBusiness.register(req.body.username, req.body.password);
+    await UserBusiness.register(req.body.name, req.body.password);
     httpCode = 200;
     body = { success: 'You have been successfully registered.' };
   } catch (err) {
@@ -90,11 +90,7 @@ app.use(middleware);
 
 app.put('/user', async (req, res) => {
   try {
-    await UserBusiness.updateUser(
-      req.body.username,
-      req.body.password,
-      authUserId
-    );
+    await UserBusiness.updateUser(req.body.name, req.body.password, authUserId);
     httpCode = 200;
     body = { success: 'Your information has been successfully updated.' };
   } catch (err) {
@@ -122,11 +118,7 @@ app.delete('/user', async (req, res) => {
 
 app.post('/card', async (req, res) => {
   try {
-    await CardBusiness.addCard(
-      req.body.label,
-      req.body.translation,
-      req.body.collectionId
-    );
+    await CardBusiness.addCard(req.body.label, req.body.translation, req.body.collectionId);
     httpCode = 200;
     body = { success: 'The card was successfully added.' };
   } catch (err) {
@@ -175,12 +167,7 @@ app.get('/card/:id', async (req, res) => {
 app.put('/card/:id', async (req, res) => {
   const cardId = req.params.id;
   try {
-    await CardBusiness.updateCard(
-      cardId,
-      req.body.label,
-      req.body.translation,
-      req.body.collectionId
-    );
+    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, req.body.collectionId);
     httpCode = 200;
     body = { success: 'The card was succesfully updated.' };
   } catch (err) {

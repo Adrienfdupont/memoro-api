@@ -6,13 +6,13 @@ import { SqlError } from 'mariadb';
 import moment from 'moment';
 
 export default class UserBusiness {
-  static async login(username: string, password: string): Promise<string> {
-    if (username.length === 0 || password.length === 0) {
+  static async login(name: string, password: string): Promise<string> {
+    if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
 
     const sql = 'SELECT * FROM users WHERE name = ?';
-    const placeholders = [username];
+    const placeholders = [name];
     let queryUsers: any[];
 
     queryUsers = await ConnectionHelper.performQuery(sql, placeholders);
@@ -21,18 +21,18 @@ export default class UserBusiness {
       throw new BusinessError(401, 'Username or password incorrect.');
     }
 
-    return await SecurityHelper.generateToken(username, queryUsers[0].id);
+    return await SecurityHelper.generateToken(name, queryUsers[0].id);
   }
 
-  static async register(username: string, password: string): Promise<void> {
-    if (username.length === 0 || password.length === 0) {
+  static async register(name: string, password: string): Promise<void> {
+    if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = 'INSERT INTO users(name, password, last_password_change) VALUES(?, ?, ?)';
     const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
-    const placeholders = [username, hashedPassword, now];
+    const placeholders = [name, hashedPassword, now];
     let queryResult: any;
 
     try {
@@ -48,15 +48,15 @@ export default class UserBusiness {
     }
   }
 
-  static async updateUser(username: string, password: string, authUserId: number) {
-    if (username.length === 0 || password.length === 0) {
+  static async updateUser(name: string, password: string, authUserId: number) {
+    if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = 'UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?';
     const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
-    const placeholders = [username, hashedPassword, now, authUserId.toString()];
+    const placeholders = [name, hashedPassword, now, authUserId.toString()];
     let queryResult: any;
 
     try {
