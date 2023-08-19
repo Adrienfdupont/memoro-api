@@ -11,7 +11,14 @@ import Collection from './types/Collection';
 
 const app = express();
 const port = process.env.PORT ?? 3000;
+const cors = require('cors');
+
 app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: 'http://localhost:4200',
+  })
+);
 ConnectionHelper.createPool();
 
 let authUserId: number;
@@ -83,7 +90,11 @@ app.use(middleware);
 
 app.put('/user', async (req, res) => {
   try {
-    await UserBusiness.updateUser(req.body.username, req.body.password, authUserId);
+    await UserBusiness.updateUser(
+      req.body.username,
+      req.body.password,
+      authUserId
+    );
     httpCode = 200;
     body = { success: 'Your information has been successfully updated.' };
   } catch (err) {
@@ -111,7 +122,11 @@ app.delete('/user', async (req, res) => {
 
 app.post('/card', async (req, res) => {
   try {
-    await CardBusiness.addCard(req.body.label, req.body.translation, req.body.collectionId);
+    await CardBusiness.addCard(
+      req.body.label,
+      req.body.translation,
+      req.body.collectionId
+    );
     httpCode = 200;
     body = { success: 'The card was successfully added.' };
   } catch (err) {
@@ -160,7 +175,12 @@ app.get('/card/:id', async (req, res) => {
 app.put('/card/:id', async (req, res) => {
   const cardId = req.params.id;
   try {
-    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, req.body.collectionId);
+    await CardBusiness.updateCard(
+      cardId,
+      req.body.label,
+      req.body.translation,
+      req.body.collectionId
+    );
     httpCode = 200;
     body = { success: 'The card was succesfully updated.' };
   } catch (err) {
