@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import bodyParser from 'body-parser';
 import ConnectionHelper from './helpers/ConnectionHelper';
 import SecurityHelper from './helpers/SecurityHelper';
@@ -20,6 +20,8 @@ ConnectionHelper.createPool();
 
 app.post('/user/register', async (req, res) => UserController.register(req, res));
 app.post('/user/login', async (req, res) => UserController.login(req, res));
+
+// routes that need authentication
 
 app.use(SecurityHelper.middleware);
 
