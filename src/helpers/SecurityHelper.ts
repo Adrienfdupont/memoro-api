@@ -2,6 +2,8 @@ import fs from 'fs';
 import crypto from 'crypto';
 import ConnectionHelper from './ConnectionHelper';
 import StatusMsgError from '../errors/BusinessError';
+import { NextFunction, Request, Response } from 'express';
+import BusinessError from '../errors/BusinessError';
 
 export default class SecurityHelper {
   static async generateToken(username: string, userId: number): Promise<string> {
@@ -90,5 +92,29 @@ export default class SecurityHelper {
     }
 
     throw new StatusMsgError(401, 'Invalid token');
+  }
+
+  static async middleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+    let httpCode = 500;
+    let body: Object = { error: 'Internal server error.' };
+    const bearer = req.headers.authorization;
+
+    if (bearer !== undefined) {
+      const token = bearer.split(' ')[1];
+      try {
+        await SecurityHelper.verifyToken(token);
+        next();
+      } catch (err) {
+        httpCode = 401;
+        if (err instanceof BusinessError) {
+          body = { error: err.message };
+        }
+        res.status(httpCode).json(body);
+      }
+    } else {
+      httpCode = 401;
+      body = { error: 'Invalid token.' };
+      res.status(httpCode).json(body);
+    }
   }
 }

@@ -1,4 +1,4 @@
-import ConnectionHelper from '../helper/ConnectionHelper';
+import ConnectionHelper from '../helpers/ConnectionHelper';
 import Card from '../types/Card';
 import BusinessError from '../errors/BusinessError';
 import { SqlError } from 'mariadb';

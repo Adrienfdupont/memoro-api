@@ -1,6 +1,6 @@
 import { SqlError } from 'mariadb';
 import BusinessError from '../errors/BusinessError';
-import ConnectionHelper from '../helper/ConnectionHelper';
+import ConnectionHelper from '../helpers/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {

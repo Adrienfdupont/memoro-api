@@ -1,6 +1,6 @@
-import ConnectionHelper from '../helper/ConnectionHelper';
+import ConnectionHelper from '../helpers/ConnectionHelper';
 import bcrypt from 'bcrypt';
-import SecurityHelper from '../helper/SecurityHelper';
+import SecurityHelper from '../helpers/SecurityHelper';
 import BusinessError from '../errors/BusinessError';
 import { SqlError } from 'mariadb';
 import moment from 'moment';
