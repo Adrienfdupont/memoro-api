@@ -1,88 +1,58 @@
 import { Request, Response } from 'express';
 import CardBusiness from '../business/CardBusiness';
-import BusinessError from '../errors/BusinessError';
 import Card from '../types/Card';
+import CoreController from './CoreController';
 
-export default class CardController {
+export default class CardController extends CoreController {
   static async addCard(req: Request, res: Response): Promise<void> {
-    let httpCode = 500;
-    let body: Object = { error: 'Internal server error.' };
     try {
       await CardBusiness.addCard(req.body.label, req.body.translation, req.body.collectionId);
-      httpCode = 200;
-      body = { success: 'The card was successfully added.' };
+      const responseBody = { success: 'The card was successfully added.' };
+      res.status(200).json(responseBody);
     } catch (err) {
-      if (err instanceof BusinessError) {
-        httpCode = err.status;
-        body = { error: err.message };
-      }
+      CoreController.sendErrorResponse(err, res);
     }
-    res.status(httpCode).json(body);
   }
 
   static async getCards(req: Request, res: Response): Promise<void> {
-    let httpCode = 500;
-    let body: Object = { error: 'Internal server error.' };
     let cards: Card[];
     try {
       cards = await CardBusiness.getCards(req.params.id);
-      httpCode = 200;
-      body = { cards: cards };
+      const responseBody = { cards: cards };
+      res.status(200).json(responseBody);
     } catch (err) {
-      if (err instanceof BusinessError) {
-        httpCode = err.status;
-        body = { error: err.message };
-      }
+      CoreController.sendErrorResponse(err, res);
     }
-    res.status(httpCode).json(body);
   }
 
   static async getCard(req: Request, res: Response): Promise<void> {
-    let httpCode = 500;
-    let body: Object = { error: 'Internal server error.' };
     let card: Card;
     try {
-      httpCode = 200;
       card = await CardBusiness.getCard(req.body.cardId);
-      body = { card: card };
+      const responseBody = { card: card };
+      res.status(200).json(responseBody);
     } catch (err) {
-      if (err instanceof BusinessError) {
-        httpCode = err.status;
-        body = { error: err.message };
-      }
+      CoreController.sendErrorResponse(err, res);
     }
-    res.status(httpCode).json(body);
   }
 
   static async updateCard(req: Request, res: Response): Promise<void> {
-    let httpCode = 500;
-    let body: Object = { error: 'Internal server error.' };
     try {
       await CardBusiness.updateCard(req.params.id, req.body.label, req.body.translation, req.body.collectionId);
-      httpCode = 200;
-      body = { success: 'The card was succesfully updated.' };
+      const responseBody = { success: 'The card was succesfully updated.' };
+      res.status(200).json(responseBody);
     } catch (err) {
-      if (err instanceof BusinessError) {
-        httpCode = err.status;
-        body = { error: err.message };
-      }
+      CoreController.sendErrorResponse(err, res);
     }
-    res.status(httpCode).json(body);
   }
 
   static async removeCard(req: Request, res: Response): Promise<void> {
-    let httpCode = 500;
-    let body: Object = { error: 'Internal server error.' };
     try {
       await CardBusiness.removeCard(req.params.id);
-      httpCode = 200;
-      body = { success: 'The card was successfuly deleted.' };
+      const responseBody = { success: 'The card was successfuly deleted.' };
+      res.status(200).json(responseBody);
     } catch (err) {
-      if (err instanceof BusinessError) {
-        httpCode = err.status;
-        body = { error: err.message };
-      }
+      CoreController.sendErrorResponse(err, res);
     }
-    res.status(httpCode).json(body);
   }
 }
