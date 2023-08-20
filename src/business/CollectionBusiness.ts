@@ -4,9 +4,9 @@ import ConnectionHelper from '../helper/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {
-  static async addCollection(name: string, userId: number): Promise<void> {
+  static async addCollection(name: string, userId: string): Promise<void> {
     const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
-    const placeholders = [name, userId.toString()];
+    const placeholders = [name, userId];
     let queryResult: any;
 
     try {
@@ -22,9 +22,9 @@ export default class CollectionBusiness {
     }
   }
 
-  static async getCollections(authUserId: number): Promise<Collection[]> {
+  static async getCollections(userId: string): Promise<Collection[]> {
     const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
-    const placeholders = [authUserId.toString()];
+    const placeholders = [userId];
     let queryResults: any[];
     let collections: Collection[];
 

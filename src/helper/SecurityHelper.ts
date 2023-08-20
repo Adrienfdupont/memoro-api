@@ -40,7 +40,7 @@ export default class SecurityHelper {
     return token;
   }
 
-  static async verifyToken(token: string): Promise<number> {
+  static async verifyToken(token: string): Promise<void> {
     // fetch token elements
     const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
 

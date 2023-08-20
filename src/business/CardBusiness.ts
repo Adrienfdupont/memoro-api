@@ -4,7 +4,7 @@ import BusinessError from '../errors/BusinessError';
 import { SqlError } from 'mariadb';
 
 export default class CardBusiness {
-  static async getCards(collectionId: number): Promise<Card[]> {
+  static async getCards(collectionId: string): Promise<Card[]> {
     const sql = 'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
     const placeholders = [collectionId.toString()];
     let cards: Card[];
@@ -46,9 +46,9 @@ export default class CardBusiness {
     return card;
   }
 
-  static async addCard(label: string, translation: string, collectionId: number): Promise<void> {
+  static async addCard(label: string, translation: string, collectionId: string): Promise<void> {
     const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
-    const placeholders = [label, translation, collectionId.toString()];
+    const placeholders = [label, translation, collectionId];
     let queryResult: any;
 
     if (label.length === 0 || translation.length === 0) {
@@ -68,9 +68,9 @@ export default class CardBusiness {
     }
   }
 
-  static async updateCard(cardId: string, label: string, translation: string, collectionId: number): Promise<void> {
+  static async updateCard(cardId: string, label: string, translation: string, collectionId: string): Promise<void> {
     const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
-    const placeholders = [label, translation, collectionId.toString(), cardId];
+    const placeholders = [label, translation, collectionId, cardId];
     let queryResult: any;
 
     if (label.length === 0 || translation.length === 0) {

@@ -21,8 +21,7 @@ app.use(
 );
 ConnectionHelper.createPool();
 
-let authUserId: number;
-let httpCode: number = 500;
+let httpCode = 500;
 let body: Object = { error: 'Internal server error.' };
 
 // ---------------------------------- routes ----------------------------------
@@ -66,12 +65,12 @@ app.post('/user', async (req, res) => {
 // ---------- authentication necessary ------------
 
 async function middleware(req: Request, res: Response, next: NextFunction) {
-  const bearer: string | undefined = req.headers.authorization;
+  const bearer = req.headers.authorization;
 
   if (bearer !== undefined) {
     const token = bearer.split(' ')[1];
     try {
-      authUserId = await SecurityHelper.verifyToken(token);
+      await SecurityHelper.verifyToken(token);
       next();
     } catch (err) {
       httpCode = 401;
@@ -88,9 +87,9 @@ async function middleware(req: Request, res: Response, next: NextFunction) {
 }
 app.use(middleware);
 
-app.put('/user', async (req, res) => {
+app.put('/user/:id', async (req, res) => {
   try {
-    await UserBusiness.updateUser(req.body.name, req.body.password, authUserId);
+    await UserBusiness.updateUser(req.body.name, req.body.password, req.params.id);
     httpCode = 200;
     body = { success: 'Your information has been successfully updated.' };
   } catch (err) {
@@ -102,9 +101,9 @@ app.put('/user', async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.delete('/user', async (req, res) => {
+app.delete('/user/:id', async (req, res) => {
   try {
-    await UserBusiness.removeUser(authUserId);
+    await UserBusiness.removeUser(req.params.id);
     httpCode = 200;
     body = { success: 'Your account was successfully deleted.' };
   } catch (err) {
@@ -130,12 +129,10 @@ app.post('/card', async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get('/cards/collection/:collectionId', async (req, res) => {
+app.get('/cards/collection/:id', async (req, res) => {
   let cards: Card[];
-  const collectionId = req.params.collectionId;
-
   try {
-    cards = await CardBusiness.getCards(parseInt(collectionId));
+    cards = await CardBusiness.getCards(req.params.id);
     httpCode = 200;
     body = { cards: cards };
   } catch (err) {
@@ -148,12 +145,10 @@ app.get('/cards/collection/:collectionId', async (req, res) => {
 });
 
 app.get('/card/:id', async (req, res) => {
-  const cardId = req.params.id;
   let card: Card;
-
   try {
     httpCode = 200;
-    card = await CardBusiness.getCard(cardId);
+    card = await CardBusiness.getCard(req.body.cardId);
     body = { card: card };
   } catch (err) {
     if (err instanceof BusinessError) {
@@ -165,9 +160,8 @@ app.get('/card/:id', async (req, res) => {
 });
 
 app.put('/card/:id', async (req, res) => {
-  const cardId = req.params.id;
   try {
-    await CardBusiness.updateCard(cardId, req.body.label, req.body.translation, req.body.collectionId);
+    await CardBusiness.updateCard(req.params.id, req.body.label, req.body.translation, req.body.collectionId);
     httpCode = 200;
     body = { success: 'The card was succesfully updated.' };
   } catch (err) {
@@ -180,10 +174,8 @@ app.put('/card/:id', async (req, res) => {
 });
 
 app.delete('/card/:id', async (req, res) => {
-  const cardId: string = req.params.id;
-
   try {
-    await CardBusiness.removeCard(cardId);
+    await CardBusiness.removeCard(req.params.id);
     httpCode = 200;
     body = { success: 'The card was successfuly deleted.' };
   } catch (err) {
@@ -197,7 +189,7 @@ app.delete('/card/:id', async (req, res) => {
 
 app.post('/collection', async (req, res) => {
   try {
-    await CollectionBusiness.addCollection(req.body.name, authUserId);
+    await CollectionBusiness.addCollection(req.body.name, req.body.userId);
     httpCode = 200;
     body = { success: 'The collection was successfully added.' };
   } catch (err) {
@@ -209,10 +201,10 @@ app.post('/collection', async (req, res) => {
   res.status(httpCode).json(body);
 });
 
-app.get('/collections/user', async (req, res) => {
+app.get('/collections/user/:id', async (req, res) => {
   let collections: Collection[];
   try {
-    collections = await CollectionBusiness.getCollections(authUserId);
+    collections = await CollectionBusiness.getCollections(req.params.id);
     httpCode = 200;
     body = { collections: collections };
   } catch (err) {
@@ -225,10 +217,9 @@ app.get('/collections/user', async (req, res) => {
 });
 
 app.get('/collection/:id', async (req, res) => {
-  const collectionId = req.params.id;
   let collection: Collection;
   try {
-    collection = await CollectionBusiness.getCollection(collectionId);
+    collection = await CollectionBusiness.getCollection(req.params.id);
     httpCode = 200;
     body = { collection: collection };
   } catch (err) {
@@ -241,10 +232,8 @@ app.get('/collection/:id', async (req, res) => {
 });
 
 app.put('/collection/:id', async (req, res) => {
-  const collectionId = req.params.id;
-
   try {
-    await CollectionBusiness.updateCollection(collectionId, req.body.name);
+    await CollectionBusiness.updateCollection(req.params.id, req.body.name);
     httpCode = 200;
     body = { success: 'The collection was succesfully updated.' };
   } catch (err) {
@@ -257,10 +246,8 @@ app.put('/collection/:id', async (req, res) => {
 });
 
 app.delete('/collection/:id', async (req, res) => {
-  const collectionId = req.params.id;
-
   try {
-    await CollectionBusiness.removeCollection(collectionId);
+    await CollectionBusiness.removeCollection(req.params.id);
     httpCode = 200;
     body = { success: 'The collection was successfuly deleted.' };
   } catch (err) {

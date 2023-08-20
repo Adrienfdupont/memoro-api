@@ -48,7 +48,7 @@ export default class UserBusiness {
     }
   }
 
-  static async updateUser(name: string, password: string, authUserId: number) {
+  static async updateUser(name: string, password: string, userId: string) {
     if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
@@ -56,7 +56,7 @@ export default class UserBusiness {
     const hashedPassword = await bcrypt.hash(password, 10);
     const sql = 'UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?';
     const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
-    const placeholders = [name, hashedPassword, now, authUserId.toString()];
+    const placeholders = [name, hashedPassword, now, userId];
     let queryResult: any;
 
     try {
@@ -72,9 +72,9 @@ export default class UserBusiness {
     }
   }
 
-  static async removeUser(authUserId: number): Promise<void> {
+  static async removeUser(userId: string): Promise<void> {
     const sql = 'DELETE FROM users WHERE id = ?';
-    const placeholders = [authUserId.toString()];
+    const placeholders = [userId];
     let queryResult: any;
 
     queryResult = await ConnectionHelper.performQuery(sql, placeholders);
