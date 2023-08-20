@@ -1,9 +1,8 @@
 import fs from 'fs';
 import crypto from 'crypto';
 import ConnectionHelper from './ConnectionHelper';
-import StatusMsgError from '../errors/BusinessError';
 import { NextFunction, Request, Response } from 'express';
-import BusinessError from '../errors/BusinessError';
+import SecurityError from '../errors/SecurityError';
 
 export default class SecurityHelper {
   static async generateToken(username: string, userId: number): Promise<string> {
@@ -51,11 +50,11 @@ export default class SecurityHelper {
     const stringPayload = Buffer.from(encodedPayload, 'base64').toString('utf-8');
     const payload = JSON.parse(stringPayload);
 
-    const expirationDate: Date = new Date(payload.expirationDate);
-    const now: Date = new Date();
+    const expirationDate = new Date(payload.expirationDate);
+    const now = new Date();
 
     if (header.typ !== 'AWT' || expirationDate < now) {
-      throw new StatusMsgError(401, 'Invalid token.');
+      throw new SecurityError(401, 'Invalid token.');
     }
 
     // Get the public key
@@ -68,30 +67,30 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, 'base64')) {
-      throw new StatusMsgError(401, 'Invalid token.');
+      throw new SecurityError(401, 'Invalid token.');
     }
 
     // verify that the user still exists and didn't change the password
-    const sql: string = 'SELECT last_password_change FROM users WHERE id = ?';
-    const placeholders: string[] = [payload.userId];
+    const sql = 'SELECT last_password_change FROM users WHERE id = ?';
+    const placeholders = [payload.userId];
     let sqlResult: any;
 
     try {
       sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
-      throw new StatusMsgError(500, 'Internal server error.');
+      throw new SecurityError(500, 'Internal server error.');
     }
 
     if (sqlResult.length === 1) {
-      const generationDate: Date = new Date(payload.generationDate);
-      const lastPasswordChange: Date = new Date(sqlResult[0].last_password_change);
+      const generationDate = new Date(payload.generationDate);
+      const lastPasswordChange = new Date(sqlResult[0].last_password_change);
 
       if (generationDate > lastPasswordChange) {
         return payload.userId;
       }
     }
 
-    throw new StatusMsgError(401, 'Invalid token');
+    throw new SecurityError(401, 'Invalid token');
   }
 
   static async middleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -106,7 +105,7 @@ export default class SecurityHelper {
         next();
       } catch (err) {
         httpCode = 401;
-        if (err instanceof BusinessError) {
+        if (err instanceof SecurityError) {
           body = { error: err.message };
         }
         res.status(httpCode).json(body);
