@@ -1,10 +1,8 @@
 import mariadb, { Connection } from 'mariadb';
 import { Pool } from 'mariadb';
-import dotenv from 'dotenv';
-dotenv.config();
 
 export default class ConnectionHelper {
-  static pool: Pool;
+  private static pool: Pool;
 
   static createPool(): void {
     ConnectionHelper.pool = mariadb.createPool({

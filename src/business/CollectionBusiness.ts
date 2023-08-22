@@ -4,7 +4,7 @@ import ConnectionHelper from '../helpers/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {
-  static async addCollection(name: string, userId: string): Promise<void> {
+  public async addCollection(name: string, userId: string): Promise<void> {
     const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
     const placeholders = [name, userId];
     let queryResult: any;
@@ -22,7 +22,7 @@ export default class CollectionBusiness {
     }
   }
 
-  static async getCollections(userId: string): Promise<Collection[]> {
+  public async getCollections(userId: string): Promise<Collection[]> {
     const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
     const placeholders = [userId];
     let queryResults: any[];
@@ -41,7 +41,7 @@ export default class CollectionBusiness {
     return collections;
   }
 
-  static async getCollection(collectionId: string): Promise<Collection> {
+  public async getCollection(collectionId: string): Promise<Collection> {
     const sql = 'SELECT * FROM collections WHERE id = ?';
     const placeholders = [collectionId];
     let queryResult: any;
@@ -57,7 +57,7 @@ export default class CollectionBusiness {
     return collection;
   }
 
-  static async updateCollection(collectionId: string, name: string): Promise<void> {
+  public async updateCollection(collectionId: string, name: string): Promise<void> {
     const sql = 'UPDATE collections SET name = ? WHERE id = ?';
     const placeholders = [name, collectionId];
     let queryResult: any;
@@ -75,7 +75,7 @@ export default class CollectionBusiness {
     }
   }
 
-  static async removeCollection(collectionId: string): Promise<void> {
+  public async removeCollection(collectionId: string): Promise<void> {
     const sql = 'DELETE FROM collections WHERE id = ?';
     const placeholders = [collectionId];
     let queryResult: any;

@@ -6,7 +6,7 @@ import { SqlError } from 'mariadb';
 import moment from 'moment';
 
 export default class UserBusiness {
-  static async login(name: string, password: string): Promise<string> {
+  public async login(name: string, password: string): Promise<string> {
     if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
@@ -24,7 +24,7 @@ export default class UserBusiness {
     return await SecurityHelper.generateToken(name, queryUsers[0].id);
   }
 
-  static async register(name: string, password: string): Promise<void> {
+  public async register(name: string, password: string): Promise<void> {
     if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
@@ -48,7 +48,7 @@ export default class UserBusiness {
     }
   }
 
-  static async updateUser(name: string, password: string, userId: string) {
+  public async updateUser(name: string, password: string, userId: string) {
     if (name.length === 0 || password.length === 0) {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
@@ -72,7 +72,7 @@ export default class UserBusiness {
     }
   }
 
-  static async removeUser(userId: string): Promise<void> {
+  public async removeUser(userId: string): Promise<void> {
     const sql = 'DELETE FROM users WHERE id = ?';
     const placeholders = [userId];
     let queryResult: any;

@@ -4,7 +4,7 @@ import BusinessError from '../errors/BusinessError';
 import { SqlError } from 'mariadb';
 
 export default class CardBusiness {
-  static async getCards(collectionId: string): Promise<Card[]> {
+  public async getCards(collectionId: string): Promise<Card[]> {
     const sql = 'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
     const placeholders = [collectionId.toString()];
     let cards: Card[];
@@ -24,7 +24,7 @@ export default class CardBusiness {
     return cards;
   }
 
-  static async getCard(cardId: string): Promise<Card> {
+  public async getCard(cardId: string): Promise<Card> {
     const sql = 'SELECT * FROM cards WHERE id = ?';
     const placeholder = [cardId];
     let queryResult: any[];
@@ -46,7 +46,7 @@ export default class CardBusiness {
     return card;
   }
 
-  static async addCard(label: string, translation: string, collectionId: string): Promise<void> {
+  public async addCard(label: string, translation: string, collectionId: string): Promise<void> {
     const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
     const placeholders = [label, translation, collectionId];
     let queryResult: any;
@@ -68,7 +68,7 @@ export default class CardBusiness {
     }
   }
 
-  static async updateCard(cardId: string, label: string, translation: string, collectionId: string): Promise<void> {
+  public async updateCard(cardId: string, label: string, translation: string, collectionId: string): Promise<void> {
     const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
     const placeholders = [label, translation, collectionId, cardId];
     let queryResult: any;
@@ -90,7 +90,7 @@ export default class CardBusiness {
     }
   }
 
-  static async removeCard(cardId: string): Promise<void> {
+  public async removeCard(cardId: string): Promise<void> {
     const sql = 'DELETE FROM cards WHERE id = ?';
     const placeholders = [cardId];
     let queryResult: any;
