@@ -13,42 +13,45 @@ export default class UserController extends CoreController {
   public async register(req: Request, res: Response): Promise<void> {
     try {
       await this.userBusiness.register(req.body.name, req.body.password);
-      const responseBody = { success: 'You were successfully registered.' };
-      res.status(200).json(responseBody);
+      this.httpCode = 200;
+      this.responseBody = { success: 'You were successfully registered.' };
     } catch (err) {
-      this.sendErrorResponse(err, res);
+      this.setErrorReponse(err);
     }
+    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async login(req: Request, res: Response): Promise<void> {
     let token: string | null;
-    let responseBody: any;
     try {
       token = await this.userBusiness.login(req.body.name, req.body.password);
-      responseBody = { token: token };
+      this.httpCode = 200;
+      this.responseBody = { token: token };
     } catch (err) {
-      this.sendErrorResponse(err, res);
+      this.setErrorReponse(err);
     }
-    res.status(200).json(responseBody);
+    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async updateUser(req: Request, res: Response): Promise<void> {
     try {
       await this.userBusiness.updateUser(req.body.name, req.body.password, req.params.id);
-      const responseBody = { success: 'Your information was successfully updated.' };
-      res.status(200).json(responseBody);
+      this.httpCode = 200;
+      this.responseBody = { success: 'Your information was successfully updated.' };
     } catch (err) {
-      this.sendErrorResponse(err, res);
+      this.setErrorReponse(err);
     }
+    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async removeUser(req: Request, res: Response): Promise<void> {
     try {
       await this.userBusiness.removeUser(req.params.id);
-      const responseBody = { success: 'Your account was successfully deleted.' };
-      res.status(200).json(responseBody);
+      this.httpCode = 200;
+      this.responseBody = { success: 'Your account was successfully deleted.' };
     } catch (err) {
-      this.sendErrorResponse(err, res);
+      this.setErrorReponse(err);
     }
+    res.status(this.httpCode).json(this.responseBody);
   }
 }
