@@ -16,14 +16,14 @@ export default class UserController extends CoreController {
     try {
       await this.userBusiness.register(req.body.name, req.body.password);
       this.httpCode = 204;
-      this.responseBody = { message: 'You were successfully registered.' };
+      res.status(this.httpCode).end();
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
         this.responseBody = { message: err.message };
       }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async login(req: Request, res: Response): Promise<void> {
@@ -66,10 +66,7 @@ export default class UserController extends CoreController {
         req.params.id
       );
       this.httpCode = 200;
-      this.responseBody = {
-        token: token,
-        message: 'Your information was successfully updated.',
-      };
+      this.responseBody = { token: token };
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
@@ -82,14 +79,14 @@ export default class UserController extends CoreController {
   public async removeUser(req: Request, res: Response): Promise<void> {
     try {
       await this.userBusiness.removeUser(req.body.password, req.params.id);
-      this.httpCode = 200;
-      this.responseBody = { message: 'Your account was successfully deleted.' };
+      this.httpCode = 204;
+      res.status(this.httpCode).end();
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
         this.responseBody = { message: err.message };
       }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 }
