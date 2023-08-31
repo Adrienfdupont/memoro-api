@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import UserBusiness from '../business/UserBusiness';
 import CoreController from './CoreController';
+import User from '../types/User';
+import BusinessError from '../errors/BusinessError';
 
 export default class UserController extends CoreController {
   private userBusiness: UserBusiness;
@@ -13,10 +15,13 @@ export default class UserController extends CoreController {
   public async register(req: Request, res: Response): Promise<void> {
     try {
       await this.userBusiness.register(req.body.name, req.body.password);
-      this.httpCode = 200;
-      this.responseBody = { success: 'You were successfully registered.' };
+      this.httpCode = 204;
+      this.responseBody = { message: 'You were successfully registered.' };
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
@@ -28,29 +33,62 @@ export default class UserController extends CoreController {
       this.httpCode = 200;
       this.responseBody = { token: token };
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
+    }
+    res.status(this.httpCode).json(this.responseBody);
+  }
+
+  public async getUser(req: Request, res: Response): Promise<void> {
+    let user: User;
+    try {
+      user = await this.userBusiness.getUser(req.params.id, false);
+      this.httpCode = 200;
+      this.responseBody = user;
+    } catch (err) {
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
 
   public async updateUser(req: Request, res: Response): Promise<void> {
+    let token: string | null;
     try {
-      await this.userBusiness.updateUser(req.body.name, req.body.password, req.params.id);
+      token = await this.userBusiness.updateUser(
+        req.body.name,
+        req.body.newPassword,
+        req.body.password,
+        req.params.id
+      );
       this.httpCode = 200;
-      this.responseBody = { success: 'Your information was successfully updated.' };
+      this.responseBody = {
+        token: token,
+        message: 'Your information was successfully updated.',
+      };
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
 
   public async removeUser(req: Request, res: Response): Promise<void> {
     try {
-      await this.userBusiness.removeUser(req.params.id);
+      await this.userBusiness.removeUser(req.body.password, req.params.id);
       this.httpCode = 200;
-      this.responseBody = { success: 'Your account was successfully deleted.' };
+      this.responseBody = { message: 'Your account was successfully deleted.' };
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
