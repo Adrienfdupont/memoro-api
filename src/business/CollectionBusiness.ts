@@ -13,7 +13,10 @@ export default class CollectionBusiness {
       queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, 'The collection already exists for this user.');
+        throw new BusinessError(
+          409,
+          'The collection already exists for this user.'
+        );
       }
     }
 
@@ -23,7 +26,9 @@ export default class CollectionBusiness {
   }
 
   public async getCollections(userId: string): Promise<Collection[]> {
-    const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
+    const sql =
+      'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id \
+      WHERE u.id = ?';
     const placeholders = [userId];
     let queryResults: any[];
     let collections: Collection[];
@@ -57,16 +62,22 @@ export default class CollectionBusiness {
     return collection;
   }
 
-  public async updateCollection(collectionId: string, name: string): Promise<void> {
+  public async updateCollection(
+    collectionId: string,
+    newName: string
+  ): Promise<void> {
     const sql = 'UPDATE collections SET name = ? WHERE id = ?';
-    const placeholders = [name, collectionId];
+    const placeholders = [newName, collectionId];
     let queryResult: any;
 
     try {
       queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, 'The collection already exists for this user.');
+        throw new BusinessError(
+          409,
+          'The collection already exists for this user.'
+        );
       }
     }
 

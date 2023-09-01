@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import CollectionBusiness from '../business/CollectionBusiness';
 import Collection from '../types/Collection';
 import CoreController from './CoreController';
+import BusinessError from '../errors/BusinessError';
 
 export default class CollectionController extends CoreController {
   private collectionBusiness: CollectionBusiness;
@@ -13,13 +14,16 @@ export default class CollectionController extends CoreController {
 
   public async addCollection(req: Request, res: Response): Promise<void> {
     try {
-      await this.collectionBusiness.addCollection(req.body.name, req.body.userId);
-      this.httpCode = 200;
-      this.responseBody = { success: 'The collection was successfully added.' };
+      await this.collectionBusiness.addCollection(req.body.name, req.params.id);
+      this.httpCode = 204;
+      res.status(this.httpCode).end();
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async getCollections(req: Request, res: Response): Promise<void> {
@@ -27,9 +31,12 @@ export default class CollectionController extends CoreController {
     try {
       collections = await this.collectionBusiness.getCollections(req.params.id);
       this.httpCode = 200;
-      this.responseBody = { collections: collections };
+      this.responseBody = collections;
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
@@ -41,30 +48,41 @@ export default class CollectionController extends CoreController {
       this.httpCode = 200;
       this.responseBody = { collection: collection };
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
     }
     res.status(this.httpCode).json(this.responseBody);
   }
 
   public async updateCollection(req: Request, res: Response): Promise<void> {
     try {
-      await this.collectionBusiness.updateCollection(req.params.id, req.body.name);
-      this.httpCode = 200;
-      this.responseBody = { success: 'The collection was succesfully updated.' };
+      await this.collectionBusiness.updateCollection(
+        req.params.id,
+        req.body.newName
+      );
+      this.httpCode = 204;
+      res.status(this.httpCode).end();
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async removeCollection(req: Request, res: Response): Promise<void> {
     try {
       await this.collectionBusiness.removeCollection(req.params.id);
-      this.httpCode = 200;
-      this.responseBody = { success: 'The collection was successfuly deleted.' };
+      this.httpCode = 204;
     } catch (err) {
-      this.setErrorReponse(err);
+      if (err instanceof BusinessError) {
+        this.httpCode = err.status;
+        this.responseBody = { message: err.message };
+      }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 }
