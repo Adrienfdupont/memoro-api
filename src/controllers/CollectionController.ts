@@ -46,7 +46,7 @@ export default class CollectionController extends CoreController {
     try {
       collection = await this.collectionBusiness.getCollection(req.params.id);
       this.httpCode = 200;
-      this.responseBody = { collection: collection };
+      this.responseBody = collection;
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
@@ -77,6 +77,7 @@ export default class CollectionController extends CoreController {
     try {
       await this.collectionBusiness.removeCollection(req.params.id);
       this.httpCode = 204;
+      res.status(this.httpCode).end();
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
