@@ -63,7 +63,7 @@ export default class UserController extends CoreController {
         req.body.name,
         req.body.newPassword,
         req.body.password,
-        req.params.id
+        req.body.id
       );
       this.httpCode = 200;
       this.responseBody = { token: token };
