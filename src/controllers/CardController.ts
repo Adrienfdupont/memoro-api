@@ -82,14 +82,14 @@ export default class CardController extends CoreController {
   public async removeCard(req: Request, res: Response): Promise<void> {
     try {
       await this.cardBusiness.removeCard(req.params.id);
-      this.httpCode = 200;
-      this.responseBody = { success: 'The card was successfuly deleted.' };
+      this.httpCode = 204;
+      res.status(this.httpCode).end();
     } catch (err) {
       if (err instanceof BusinessError) {
         this.httpCode = err.status;
         this.responseBody = { message: err.message };
       }
+      res.status(this.httpCode).json(this.responseBody);
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 }
