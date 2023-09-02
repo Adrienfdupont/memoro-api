@@ -44,7 +44,7 @@ app.get('/cards/collection/:id', async (req, res) =>
   cardController.getCards(req, res)
 );
 app.get('/card/:id', async (req, res) => cardController.getCard(req, res));
-app.put('/card/:id', async (req, res) => cardController.updateCard(req, res));
+app.put('/card', async (req, res) => cardController.updateCard(req, res));
 app.delete('/card/:id', async (req, res) =>
   cardController.removeCard(req, res)
 );

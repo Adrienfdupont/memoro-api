@@ -5,7 +5,8 @@ import { SqlError } from 'mariadb';
 
 export default class CardBusiness {
   public async getCards(collectionId: string): Promise<Card[]> {
-    const sql = 'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
+    const sql =
+      'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
     const placeholders = [collectionId.toString()];
     let cards: Card[];
     let queryResult: any[];
@@ -46,8 +47,13 @@ export default class CardBusiness {
     return card;
   }
 
-  public async addCard(label: string, translation: string, collectionId: string): Promise<void> {
-    const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
+  public async addCard(
+    label: string,
+    translation: string,
+    collectionId: string
+  ): Promise<void> {
+    const sql =
+      'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
     const placeholders = [label, translation, collectionId];
     let queryResult: any;
 
@@ -68,12 +74,18 @@ export default class CardBusiness {
     }
   }
 
-  public async updateCard(cardId: string, label: string, translation: string, collectionId: string): Promise<void> {
-    const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
-    const placeholders = [label, translation, collectionId, cardId];
+  public async updateCard(
+    cardId: string,
+    newLabel: string,
+    newTranslation: string,
+    collectionId: string
+  ): Promise<void> {
+    const sql =
+      'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
+    const placeholders = [newLabel, newTranslation, collectionId, cardId];
     let queryResult: any;
 
-    if (label.length === 0 || translation.length === 0) {
+    if (newLabel.length === 0 || newTranslation.length === 0) {
       throw new BusinessError(400, 'Please provide a label and a translation.');
     }
 
