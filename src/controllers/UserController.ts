@@ -78,7 +78,7 @@ export default class UserController extends CoreController {
 
   public async removeUser(req: Request, res: Response): Promise<void> {
     try {
-      await this.userBusiness.removeUser(req.body.password, req.params.id);
+      await this.userBusiness.removeUser(req.body.password, req.body.id);
       this.httpCode = 204;
       res.status(this.httpCode).end();
     } catch (err) {
