@@ -34,7 +34,7 @@ app.post('/user/login', async (req, res) => userController.login(req, res));
 app.use(SecurityHelper.middleware);
 
 app.get('/user/:id', async (req, res) => userController.getUser(req, res));
-app.put('/user/:id', async (req, res) => userController.updateUser(req, res));
+app.put('/user', async (req, res) => userController.updateUser(req, res));
 app.post('/user/delete/:id', async (req, res) =>
   userController.removeUser(req, res)
 );
