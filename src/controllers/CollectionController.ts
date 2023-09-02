@@ -14,7 +14,7 @@ export default class CollectionController extends CoreController {
 
   public async addCollection(req: Request, res: Response): Promise<void> {
     try {
-      await this.collectionBusiness.addCollection(req.body.name, req.params.id);
+      await this.collectionBusiness.addCollection(req.body.name, req.body.id);
       this.httpCode = 204;
       res.status(this.httpCode).end();
     } catch (err) {
@@ -59,7 +59,7 @@ export default class CollectionController extends CoreController {
   public async updateCollection(req: Request, res: Response): Promise<void> {
     try {
       await this.collectionBusiness.updateCollection(
-        req.params.id,
+        req.body.id,
         req.body.newName
       );
       this.httpCode = 204;

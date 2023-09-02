@@ -49,7 +49,7 @@ app.delete('/card/:id', async (req, res) =>
   cardController.removeCard(req, res)
 );
 
-app.post('/collection/user/:id', async (req, res) =>
+app.post('/collection', async (req, res) =>
   collectionController.addCollection(req, res)
 );
 app.get('/collections/user/:id', async (req, res) =>
@@ -58,7 +58,7 @@ app.get('/collections/user/:id', async (req, res) =>
 app.get('/collection/:id', async (req, res) =>
   collectionController.getCollection(req, res)
 );
-app.put('/collection/:id', async (req, res) =>
+app.put('/collection', async (req, res) =>
   collectionController.updateCollection(req, res)
 );
 app.delete('/collection/:id', async (req, res) =>
