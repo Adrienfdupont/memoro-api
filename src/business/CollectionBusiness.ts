@@ -1,19 +1,22 @@
 import { SqlError } from 'mariadb';
 import BusinessError from '../errors/BusinessError';
-import ConnectionHelper from '../helper/ConnectionHelper';
+import ConnectionHelper from '../helpers/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {
-  static async addCollection(name: string, userId: number): Promise<void> {
+  public async addCollection(name: string, userId: string): Promise<void> {
     const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
-    const placeholders = [name, userId.toString()];
+    const placeholders = [name, userId];
     let queryResult: any;
 
     try {
       queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, 'The collection already exists for this user.');
+        throw new BusinessError(
+          409,
+          'The collection already exists for this user.'
+        );
       }
     }
 
@@ -22,9 +25,11 @@ export default class CollectionBusiness {
     }
   }
 
-  static async getCollections(authUserId: number): Promise<Collection[]> {
-    const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
-    const placeholders = [authUserId.toString()];
+  public async getCollections(userId: string): Promise<Collection[]> {
+    const sql =
+      'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id \
+      WHERE u.id = ?';
+    const placeholders = [userId];
     let queryResults: any[];
     let collections: Collection[];
 
@@ -41,7 +46,7 @@ export default class CollectionBusiness {
     return collections;
   }
 
-  static async getCollection(collectionId: string): Promise<Collection> {
+  public async getCollection(collectionId: string): Promise<Collection> {
     const sql = 'SELECT * FROM collections WHERE id = ?';
     const placeholders = [collectionId];
     let queryResult: any;
@@ -57,16 +62,22 @@ export default class CollectionBusiness {
     return collection;
   }
 
-  static async updateCollection(collectionId: string, name: string): Promise<void> {
+  public async updateCollection(
+    collectionId: string,
+    newName: string
+  ): Promise<void> {
     const sql = 'UPDATE collections SET name = ? WHERE id = ?';
-    const placeholders = [name, collectionId];
+    const placeholders = [newName, collectionId];
     let queryResult: any;
 
     try {
       queryResult = await ConnectionHelper.performQuery(sql, placeholders);
     } catch (err) {
       if (err instanceof SqlError && err.errno === 1062) {
-        throw new BusinessError(409, 'The collection already exists for this user.');
+        throw new BusinessError(
+          409,
+          'The collection already exists for this user.'
+        );
       }
     }
 
@@ -75,7 +86,7 @@ export default class CollectionBusiness {
     }
   }
 
-  static async removeCollection(collectionId: string): Promise<void> {
+  public async removeCollection(collectionId: string): Promise<void> {
     const sql = 'DELETE FROM collections WHERE id = ?';
     const placeholders = [collectionId];
     let queryResult: any;
