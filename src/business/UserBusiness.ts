@@ -12,7 +12,7 @@ export default class UserBusiness {
       throw new BusinessError(401, 'Please fill in the fields.');
     }
 
-    const sql = 'SELECT * FROM users WHERE name = ?';
+    const sql = 'SELECT * FROM users WHERE BINARY name = ?';
     const placeholders = [name];
     let queryUsers: any[];
 
