@@ -15,7 +15,7 @@ dotenv.config();
 app.use(bodyParser.json());
 app.use(
   cors({
-    origin: 'http://localhost:4200',
+    origin: process.env.ALLOW_ORIGIN,
   })
 );
 ConnectionHelper.createPool();
