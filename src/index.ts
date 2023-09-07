@@ -24,6 +24,8 @@ const userController = new UserController();
 const collectionController = new CollectionController();
 const cardController = new CardController();
 
+app.get('/', async (req, res) => res.send(204).end());
+
 app.post('/user/register', async (req, res) =>
   userController.register(req, res)
 );
