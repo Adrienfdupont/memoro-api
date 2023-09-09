@@ -2,10 +2,10 @@
   "name": "memoro-api",
   "version": "2.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "app.ts",
   "scripts": {
-    "start": "nodemon --watch src -e ts --exec ts-node index.ts",
-    "prod": "ts-node index.ts"
+    "start": "nodemon --watch src -e ts --exec ts-node src/app.ts",
+    "prod": "ts-node src/app.ts"
   },
   "author": "Adrien",
   "license": "ISC",

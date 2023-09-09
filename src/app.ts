@@ -1,10 +1,10 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import ConnectionHelper from './src/helpers/ConnectionHelper';
-import SecurityHelper from './src/helpers/SecurityHelper';
-import UserController from './src/controllers/UserController';
-import CardController from './src/controllers/CardController';
-import CollectionController from './src/controllers/CollectionController';
+import ConnectionHelper from './helpers/ConnectionHelper';
+import SecurityHelper from './helpers/SecurityHelper';
+import UserController from './controllers/UserController';
+import CardController from './controllers/CardController';
+import CollectionController from './controllers/CollectionController';
 import dotenv from 'dotenv';
 
 const app = express();
@@ -23,8 +23,6 @@ ConnectionHelper.createPool();
 const userController = new UserController();
 const collectionController = new CollectionController();
 const cardController = new CardController();
-
-app.get('/', async (req, res) => res.send(204).end());
 
 app.post('/user/register', async (req, res) =>
   userController.register(req, res)
