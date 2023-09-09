@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "nodemon --watch src -e ts --exec ts-node api/src/index.ts",
-    "prod": "ts-node api/src/index.ts"
+    "start": "nodemon --watch src -e ts --exec ts-node index.ts",
+    "prod": "ts-node index.ts"
   },
   "author": "Adrien",
   "license": "ISC",
