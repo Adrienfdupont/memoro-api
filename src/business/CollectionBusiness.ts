@@ -6,12 +6,12 @@ import Collection from '../types/Collection';
 export default class CollectionBusiness {
   public async addCollection(
     name: string,
-    lastOPen: string,
+    lastOpen: string,
     userId: string
   ): Promise<void> {
     const sql =
       'INSERT INTO collections (name, last_open, user_id) VALUES (?, ?, ?)';
-    const placeholders = [name, lastOPen, userId];
+    const placeholders = [name, lastOpen, userId];
     let queryResult: any;
 
     try {
