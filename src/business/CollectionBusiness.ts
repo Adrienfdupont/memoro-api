@@ -72,10 +72,10 @@ export default class CollectionBusiness {
   public async updateCollection(
     collectionId: string,
     newName: string,
-    lastOpen: string
+    newLastOpen: string
   ): Promise<void> {
     const sql = 'UPDATE collections SET name = ?, last_open = ? WHERE id = ?';
-    const placeholders = [newName, lastOpen, collectionId];
+    const placeholders = [newName, newLastOpen, collectionId];
     let queryResult: any;
 
     try {
