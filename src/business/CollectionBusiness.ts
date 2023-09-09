@@ -4,9 +4,14 @@ import ConnectionHelper from '../helpers/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {
-  public async addCollection(name: string, userId: string): Promise<void> {
-    const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
-    const placeholders = [name, userId];
+  public async addCollection(
+    name: string,
+    lastOPen: string,
+    userId: string
+  ): Promise<void> {
+    const sql =
+      'INSERT INTO collections (name, last_open, user_id) VALUES (?, ?, ?)';
+    const placeholders = [name, lastOPen, userId];
     let queryResult: any;
 
     try {
@@ -39,6 +44,7 @@ export default class CollectionBusiness {
       return {
         id: result.id,
         name: result.name,
+        lastOpen: result.last_open,
         userId: result.user_id,
       };
     });
@@ -56,6 +62,7 @@ export default class CollectionBusiness {
     const collection = {
       id: queryResult[0].id,
       name: queryResult[0].name,
+      lastOpen: queryResult[0].last_open,
       userId: queryResult[0].user_id,
     };
 
@@ -64,10 +71,11 @@ export default class CollectionBusiness {
 
   public async updateCollection(
     collectionId: string,
-    newName: string
+    newName: string,
+    lastOpen: string
   ): Promise<void> {
-    const sql = 'UPDATE collections SET name = ? WHERE id = ?';
-    const placeholders = [newName, collectionId];
+    const sql = 'UPDATE collections SET name = ?, last_open = ? WHERE id = ?';
+    const placeholders = [newName, lastOpen, collectionId];
     let queryResult: any;
 
     try {
