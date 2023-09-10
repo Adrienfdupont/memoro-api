@@ -8,7 +8,6 @@ import CollectionController from './controllers/CollectionController';
 import dotenv from 'dotenv';
 
 const app = express();
-const port = process.env.PORT ?? 3000;
 const cors = require('cors');
 
 dotenv.config();
@@ -23,6 +22,8 @@ ConnectionHelper.createPool();
 const userController = new UserController();
 const collectionController = new CollectionController();
 const cardController = new CardController();
+
+app.get('/', async (req, res) => res.send('Momoro APi is workling !'));
 
 app.post('/user/register', async (req, res) =>
   userController.register(req, res)
@@ -65,4 +66,4 @@ app.delete('/collection/:id', async (req, res) =>
   collectionController.removeCollection(req, res)
 );
 
-app.listen(port, () => console.log('Server started'));
+export default app;
