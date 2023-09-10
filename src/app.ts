@@ -23,7 +23,7 @@ const userController = new UserController();
 const collectionController = new CollectionController();
 const cardController = new CardController();
 
-app.get('/', async (req, res) => res.send('Momoro APi is workling !'));
+app.get('/', async (req, res) => res.send('Momoro APi is workling.'));
 
 app.post('/user/register', async (req, res) =>
   userController.register(req, res)
