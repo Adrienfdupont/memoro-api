@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 
 const app = express();
+const port = process.env.PORT ?? 3000;
 
 dotenv.config();
 app.use(bodyParser.json());
@@ -65,5 +66,7 @@ app.put('/collection', async (req, res) =>
 app.delete('/collection/:id', async (req, res) =>
   collectionController.removeCollection(req, res)
 );
+
+app.listen(port, () => console.log('Server started'));
 
 export default app;
