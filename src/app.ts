@@ -6,9 +6,9 @@ import UserController from './controllers/UserController';
 import CardController from './controllers/CardController';
 import CollectionController from './controllers/CollectionController';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 const app = express();
-const cors = require('cors');
 
 dotenv.config();
 app.use(bodyParser.json());
