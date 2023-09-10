@@ -68,5 +68,3 @@ app.delete('/collection/:id', async (req, res) =>
 );
 
 app.listen(port, () => console.log('Server started'));
-
-export default app;
