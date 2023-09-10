@@ -4,14 +4,9 @@ import ConnectionHelper from '../helpers/ConnectionHelper';
 import Collection from '../types/Collection';
 
 export default class CollectionBusiness {
-  public async addCollection(
-    name: string,
-    lastOpen: string,
-    userId: string
-  ): Promise<void> {
-    const sql =
-      'INSERT INTO collections (name, last_open, user_id) VALUES (?, ?, ?)';
-    const placeholders = [name, lastOpen, userId];
+  public async addCollection(name: string, userId: string): Promise<void> {
+    const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
+    const placeholders = [name, userId];
     let queryResult: any;
 
     try {
