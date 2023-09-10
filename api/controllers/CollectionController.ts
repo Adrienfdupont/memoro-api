@@ -16,7 +16,6 @@ export default class CollectionController extends CoreController {
     try {
       await this.collectionBusiness.addCollection(
         req.body.name,
-        req.body.lastOpen,
         req.body.userId
       );
       this.httpCode = 204;
