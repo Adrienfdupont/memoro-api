@@ -1,11 +1,13 @@
-import fs from 'fs';
 import crypto from 'crypto';
 import ConnectionHelper from './ConnectionHelper';
 import { NextFunction, Request, Response } from 'express';
 import SecurityError from '../errors/SecurityError';
 
 export default class SecurityHelper {
-  static async generateToken(username: string, userId: number): Promise<string> {
+  static async generateToken(
+    username: string,
+    userId: number
+  ): Promise<string> {
     // generate the header
     const header = JSON.stringify({
       alg: 'RSA-SHA256',
@@ -26,7 +28,11 @@ export default class SecurityHelper {
     });
 
     // cypher the payload
-    const privateKeyContent = fs.readFileSync('keys/privatekey.pem').toString();
+    const privateKeyContent = Buffer.from(
+      process.env.PRIVATE_KEY ?? '',
+      'base64'
+    ).toString('utf-8');
+
     const privateKey = crypto.createPrivateKey(privateKeyContent);
     const signer = crypto.createSign('RSA-SHA256');
     signer.write(payload);
@@ -46,8 +52,12 @@ export default class SecurityHelper {
     const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
 
     // verify token type and expiration date
-    const header = JSON.parse(Buffer.from(encodedHeader, 'base64').toString('utf-8'));
-    const stringPayload = Buffer.from(encodedPayload, 'base64').toString('utf-8');
+    const header = JSON.parse(
+      Buffer.from(encodedHeader, 'base64').toString('utf-8')
+    );
+    const stringPayload = Buffer.from(encodedPayload, 'base64').toString(
+      'utf-8'
+    );
     const payload = JSON.parse(stringPayload);
 
     const expirationDate = new Date(payload.expirationDate);
@@ -58,7 +68,11 @@ export default class SecurityHelper {
     }
 
     // Get the public key
-    const publicKeyContent = fs.readFileSync('keys/publickey.pem').toString();
+    const publicKeyContent = Buffer.from(
+      process.env.PUBLIC_KEY ?? '',
+      'base64'
+    ).toString('utf-8');
+
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
@@ -93,7 +107,11 @@ export default class SecurityHelper {
     throw new SecurityError(401, 'Invalid token');
   }
 
-  static async middleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async middleware(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     let httpCode = 500;
     let body: Object = { error: 'Internal server error.' };
     const bearer = req.headers.authorization;
