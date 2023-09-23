@@ -8,7 +8,7 @@
     "vercel-build": "tsc"
   },
   "keywords": [],
-  "author": "Adriendupont",
+  "author": "Adrienfdupont",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
