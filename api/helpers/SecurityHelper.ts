@@ -1,4 +1,3 @@
-import fs from 'fs';
 import crypto from 'crypto';
 import ConnectionHelper from './ConnectionHelper';
 import { NextFunction, Request, Response } from 'express';
@@ -29,7 +28,11 @@ export default class SecurityHelper {
     });
 
     // cypher the payload
-    const privateKeyContent = fs.readFileSync('keys/privatekey.pem').toString();
+    const privateKeyContent = Buffer.from(
+      process.env.PRIVATE_KEY ?? '',
+      'base64'
+    ).toString('utf-8');
+
     const privateKey = crypto.createPrivateKey(privateKeyContent);
     const signer = crypto.createSign('RSA-SHA256');
     signer.write(payload);
@@ -65,7 +68,11 @@ export default class SecurityHelper {
     }
 
     // Get the public key
-    const publicKeyContent = fs.readFileSync('keys/publickey.pem');
+    const publicKeyContent = Buffer.from(
+      process.env.PUBLIC_KEY ?? '',
+      'base64'
+    ).toString('utf-8');
+
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
