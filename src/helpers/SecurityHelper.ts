@@ -32,7 +32,6 @@ export default class SecurityHelper {
       process.env.PRIVATE_KEY ?? '',
       'base64'
     ).toString('utf-8');
-
     const privateKey = crypto.createPrivateKey(privateKeyContent);
     const signer = crypto.createSign('RSA-SHA256');
     signer.write(payload);
@@ -72,7 +71,6 @@ export default class SecurityHelper {
       process.env.PUBLIC_KEY ?? '',
       'base64'
     ).toString('utf-8');
-
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
