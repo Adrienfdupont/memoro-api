@@ -21,9 +21,24 @@ app.use(
   })
 );
 
-const userController = new UserController();
-const collectionController = new CollectionController();
-const cardController = new CardController();
+let userController: UserController;
+let collectionController: CollectionController;
+let cardController: CardController;
+
+app.use((req, res, next) => {
+  const entity = req.originalUrl.split('/')[1];
+
+  switch (entity) {
+    case 'user':
+      userController = new UserController();
+    case 'collection':
+      collectionController = new CollectionController();
+    case 'card':
+      cardController = new CardController();
+  }
+
+  next();
+});
 
 app.get('/', async (req, res) => res.send('Momoro APi is workling.'));
 
@@ -43,7 +58,7 @@ app.post('/user/delete', async (req, res) =>
 );
 
 app.post('/card', async (req, res) => cardController.addCard(req, res));
-app.get('/cards/collection/:id', async (req, res) =>
+app.get('/card/collection/:id', async (req, res) =>
   cardController.getCards(req, res)
 );
 app.get('/card/:id', async (req, res) => cardController.getCard(req, res));
@@ -55,7 +70,7 @@ app.delete('/card/:id', async (req, res) =>
 app.post('/collection', async (req, res) =>
   collectionController.addCollection(req, res)
 );
-app.get('/collections/user/:id', async (req, res) =>
+app.get('/collection/user/:id', async (req, res) =>
   collectionController.getCollections(req, res)
 );
 app.get('/collection/:id', async (req, res) =>
