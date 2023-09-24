@@ -2,13 +2,12 @@
   "name": "memoro-api",
   "version": "2.0.0",
   "description": "",
-  "main": "api/app.ts",
+  "main": "src/app.ts",
   "scripts": {
-    "start": "nodemon --watch api -e ts --exec ts-node api/app.ts",
-    "prod": "ts-node api/app.ts",
-    "vercel-build": "ts-node"
+    "start": "nodemon --watch src -e ts --exec ts-node src/app.ts",
+    "prod": "ts-node src/app.ts"
   },
-  "author": "Adrien",
+  "author": "Adrienfdupont",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
