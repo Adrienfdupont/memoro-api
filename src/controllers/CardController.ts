@@ -1,95 +1,106 @@
 import { Request, Response } from 'express';
-import CardBusiness from '../business/CardBusiness';
 import Card from '../types/Card';
 import CoreController from './CoreController';
-import BusinessError from '../errors/BusinessError';
+import ConnectionHelper from '../helpers/ConnectionHelper';
+import { SqlError } from 'mariadb';
 
 export default class CardController extends CoreController {
-  private cardBusiness: CardBusiness;
-
   constructor() {
     super();
-    this.cardBusiness = new CardBusiness();
   }
 
   public async addCard(req: Request, res: Response): Promise<void> {
-    try {
-      await this.cardBusiness.addCard(
-        req.body.label,
-        req.body.translation,
-        req.body.collectionId
-      );
-      this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
+    if (req.body.label?.length === 0 || req.body.translation?.length === 0) {
+      this.httpCode = 400;
+    } else {
+      const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
+      const placeholders = [req.body.label, req.body.translation, req.body.collectionId];
+      let queryResult: any;
+
+      try {
+        queryResult = await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          this.httpCode = 409;
+        }
       }
-      res.status(this.httpCode).json(this.responseBody);
+      if (queryResult.affectedRows === 1) {
+        this.httpCode = 204;
+      }
     }
+    res.status(this.httpCode).end();
   }
 
   public async getCards(req: Request, res: Response): Promise<void> {
-    let cards: Card[];
-    try {
-      cards = await this.cardBusiness.getCards(req.params.id);
+    const sql = 'SELECT c.* FROM cards c INNER JOIN collections col ON c.collection_id = col.id WHERE col.id = ?';
+    const placeholders = [req.params.id];
+    const queryResults: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+    if (queryResults) {
+      const cards: Card[] = queryResults.map((result: any) => {
+        return {
+          id: result.id,
+          label: result.label,
+          translation: result.translation,
+          collectionId: result.collection_id,
+        };
+      });
       this.httpCode = 200;
-      this.responseBody = cards;
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
-      }
+      res.status(this.httpCode).json(cards);
     }
-    res.status(this.httpCode).json(this.responseBody);
+    res.status(this.httpCode).end();
   }
 
   public async getCard(req: Request, res: Response): Promise<void> {
-    let card: Card;
-    try {
-      card = await this.cardBusiness.getCard(req.body.cardId);
+    const sql = 'SELECT * FROM cards WHERE id = ?';
+    const placeholder = [req.params.id];
+    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholder);
+
+    if (queryResult?.length === 0) {
+      this.httpCode = 404;
+    } else {
+      const card: Card = {
+        id: queryResult[0].id,
+        label: queryResult[0].label,
+        translation: queryResult[0].translation,
+        collectionId: queryResult[0].collection_id,
+      };
       this.httpCode = 200;
-      this.responseBody = { card: card };
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
-      }
+      res.status(this.httpCode).json(card);
     }
-    res.status(this.httpCode).json(this.responseBody);
+    res.status(this.httpCode).end();
   }
 
   public async updateCard(req: Request, res: Response): Promise<void> {
-    try {
-      await this.cardBusiness.updateCard(
-        req.body.id,
-        req.body.newLabel,
-        req.body.newTranslation,
-        req.body.collectionId
-      );
-      this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
+    if (req.body.newLabel?.length === 0 || req.body.newTranslation?.length === 0) {
+      this.httpCode = 400;
+    } else {
+      const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
+      const placeholders = [req.body.newLabel, req.body.newTranslation, req.body.collectionId, req.body.id];
+      let queryResult: any;
+
+      try {
+        queryResult = await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          this.httpCode = 409;
+        }
       }
-      res.status(this.httpCode).json(this.responseBody);
+      if (queryResult.affectedRows === 1) {
+        this.httpCode = 204;
+      }
     }
+    res.status(this.httpCode).end();
   }
 
   public async removeCard(req: Request, res: Response): Promise<void> {
-    try {
-      await this.cardBusiness.removeCard(req.params.id);
+    const sql = 'DELETE FROM cards WHERE id = ?';
+    const placeholders = [req.params.id];
+    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+    if (queryResult.affectedRows === 1) {
       this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
-      }
-      res.status(this.httpCode).json(this.responseBody);
     }
+    res.status(this.httpCode).end();
   }
 }
