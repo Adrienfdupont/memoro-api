@@ -3,6 +3,9 @@ import Collection from '../types/Collection';
 import CoreController from './CoreController';
 import ConnectionHelper from "../helpers/ConnectionHelper";
 import { SqlError } from "mariadb";
+import BadRequestError from '../errors/BadRequestError';
+import ConflictError from '../errors/ConflictError';
+import NotFoundError from '../errors/NotFoundError';
 
 export default class CollectionController extends CoreController {
   constructor() {
@@ -10,22 +13,24 @@ export default class CollectionController extends CoreController {
   }
 
   public async addCollection(req: Request, res: Response): Promise<void> {
-    if (req.body.name.length === 0) {
-      this.httpCode = 400;
-    }
-    const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
-    const placeholders = [req.body.name, req.body.userId];
-    let queryResult: any;
-
     try {
-      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      if (err instanceof SqlError && err.errno === 1062) {
-        this.httpCode = 409;
+      if (req.body.name.length === 0) {
+        throw new BadRequestError();
       }
-    }
-    if (queryResult.affectedRows === 1) {
+      const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
+      const placeholders = [req.body.name, req.body.userId];
+  
+      try {
+        await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          throw new ConflictError();
+        }
+      }
+
       this.httpCode = 204;
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
     res.status(this.httpCode).end();
   }
@@ -52,13 +57,15 @@ export default class CollectionController extends CoreController {
   }
 
   public async getCollection(req: Request, res: Response): Promise<void> {
-    const sql = 'SELECT * FROM collections WHERE id = ?';
-    const placeholders = [req.params.id];
-    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+    try {
+      const sql = 'SELECT * FROM collections WHERE id = ?';
+      const placeholders = [req.params.id];
+      const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+  
+      if (queryResult.length === 0) {
+        throw new NotFoundError();
+      }
 
-    if (queryResult.length === 0) {
-      this.httpCode = 404;
-    } else {
       const collection: Collection = {
         id: queryResult[0].id,
         name: queryResult[0].name,
@@ -66,24 +73,28 @@ export default class CollectionController extends CoreController {
         userId: queryResult[0].user_id,
       };
       res.status(200).json(collection);
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
+      res.status(this.httpCode).end();
     }
-    res.status(this.httpCode).end();
   }
 
   public async updateCollection(req: Request, res: Response): Promise<void> {
-    const sql = 'UPDATE collections SET name = ?, last_open = ? WHERE id = ?';
-    const placeholders = [req.body.newName, req.body.newLastOpen, req.body.id];
-    let queryResult: any;
-
     try {
-      queryResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      if (err instanceof SqlError && err.errno === 1062) {
-        this.httpCode = 409;
+      const sql = 'UPDATE collections SET name = ?, last_open = ? WHERE id = ?';
+      const placeholders = [req.body.newName, req.body.newLastOpen, req.body.id];
+
+      try {
+        await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          throw new ConflictError();
+        }
       }
-    }
-    if (queryResult.affectedRows === 1) {
+
       this.httpCode = 204;
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
     res.status(this.httpCode).end();
   }
@@ -91,11 +102,9 @@ export default class CollectionController extends CoreController {
   public async removeCollection(req: Request, res: Response): Promise<void> {
     const sql = 'DELETE FROM collections WHERE id = ?';
     const placeholders = [req.params.id];
-    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+    await ConnectionHelper.performQuery(sql, placeholders);
 
-    if (queryResult.affectedRows === 1) {
-      this.httpCode = 204;
-    }
+    this.httpCode = 204;
     res.status(this.httpCode).end();
   }
 }
