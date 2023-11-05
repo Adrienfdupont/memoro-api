@@ -3,6 +3,9 @@ import Card from '../types/Card';
 import CoreController from './CoreController';
 import ConnectionHelper from '../helpers/ConnectionHelper';
 import { SqlError } from 'mariadb';
+import BadRequestError from '../errors/BadRequestError';
+import NotFoundError from '../errors/NotFoundError';
+import ConflictError from '../errors/ConflictError';
 
 export default class CardController extends CoreController {
   constructor() {
@@ -10,23 +13,25 @@ export default class CardController extends CoreController {
   }
 
   public async addCard(req: Request, res: Response): Promise<void> {
-    if (req.body.label?.length === 0 || req.body.translation?.length === 0) {
-      this.httpCode = 400;
-    } else {
+    try {
+      if (req.body.label?.length === 0 || req.body.translation?.length === 0) {
+        throw new BadRequestError();
+      }
+
       const sql = 'INSERT INTO cards(label, translation, collection_id) VALUES(?, ?, ?)';
       const placeholders = [req.body.label, req.body.translation, req.body.collectionId];
-      let queryResult: any;
-
+  
       try {
-        queryResult = await ConnectionHelper.performQuery(sql, placeholders);
+        await ConnectionHelper.performQuery(sql, placeholders);
       } catch (err) {
         if (err instanceof SqlError && err.errno === 1062) {
-          this.httpCode = 409;
+          throw new ConflictError();
         }
       }
-      if (queryResult.affectedRows === 1) {
-        this.httpCode = 204;
-      }
+      
+      this.httpCode = 204;
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
     res.status(this.httpCode).end();
   }
@@ -36,29 +41,29 @@ export default class CardController extends CoreController {
     const placeholders = [req.params.id];
     const queryResults: any = await ConnectionHelper.performQuery(sql, placeholders);
 
-    if (queryResults) {
-      const cards: Card[] = queryResults.map((result: any) => {
-        return {
-          id: result.id,
-          label: result.label,
-          translation: result.translation,
-          collectionId: result.collection_id,
-        };
-      });
-      this.httpCode = 200;
-      res.status(this.httpCode).json(cards);
-    }
-    res.status(this.httpCode).end();
+    const cards: Card[] = queryResults.map((result: any) => {
+      return {
+        id: result.id,
+        label: result.label,
+        translation: result.translation,
+        collectionId: result.collection_id,
+      };
+    });
+    
+    this.httpCode = 200;
+    res.status(this.httpCode).json(cards);
   }
 
   public async getCard(req: Request, res: Response): Promise<void> {
-    const sql = 'SELECT * FROM cards WHERE id = ?';
-    const placeholder = [req.params.id];
-    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholder);
+    try {
+      const sql = 'SELECT * FROM cards WHERE id = ?';
+      const placeholder = [req.params.id];
+      const queryResult: any = await ConnectionHelper.performQuery(sql, placeholder);
+  
+      if (queryResult?.length === 0) {
+        throw new NotFoundError();
+      }
 
-    if (queryResult?.length === 0) {
-      this.httpCode = 404;
-    } else {
       const card: Card = {
         id: queryResult[0].id,
         label: queryResult[0].label,
@@ -67,28 +72,33 @@ export default class CardController extends CoreController {
       };
       this.httpCode = 200;
       res.status(this.httpCode).json(card);
+      
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
+      res.status(this.httpCode).end();
     }
-    res.status(this.httpCode).end();
   }
 
   public async updateCard(req: Request, res: Response): Promise<void> {
-    if (req.body.newLabel?.length === 0 || req.body.newTranslation?.length === 0) {
-      this.httpCode = 400;
-    } else {
+    try {
+      if (req.body.newLabel?.length === 0 || req.body.newTranslation?.length === 0) {
+        throw new BadRequestError();
+      }
+      
       const sql = 'UPDATE cards SET label = ?, translation = ?, collection_id = ? WHERE id = ?';
       const placeholders = [req.body.newLabel, req.body.newTranslation, req.body.collectionId, req.body.id];
-      let queryResult: any;
 
       try {
-        queryResult = await ConnectionHelper.performQuery(sql, placeholders);
+        await ConnectionHelper.performQuery(sql, placeholders);
       } catch (err) {
         if (err instanceof SqlError && err.errno === 1062) {
-          this.httpCode = 409;
+          throw new ConflictError();
         }
       }
-      if (queryResult.affectedRows === 1) {
-        this.httpCode = 204;
-      }
+      
+      this.httpCode = 204; 
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
     res.status(this.httpCode).end();
   }
@@ -96,11 +106,9 @@ export default class CardController extends CoreController {
   public async removeCard(req: Request, res: Response): Promise<void> {
     const sql = 'DELETE FROM cards WHERE id = ?';
     const placeholders = [req.params.id];
-    const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-
-    if (queryResult.affectedRows === 1) {
-      this.httpCode = 204;
-    }
+    await ConnectionHelper.performQuery(sql, placeholders);
+    
+    this.httpCode = 204;
     res.status(this.httpCode).end();
   }
 }

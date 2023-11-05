@@ -153,8 +153,7 @@ export default class UserController extends CoreController {
 
       const updateSql = 'DELETE FROM users WHERE id = ?';
       const updatePlaceholders = [req.body.id];
-      let queryResult: any;
-      queryResult = await ConnectionHelper.performQuery(updateSql, updatePlaceholders);
+      await ConnectionHelper.performQuery(updateSql, updatePlaceholders);
 
       this.httpCode = 204;
     } catch (err: any) {

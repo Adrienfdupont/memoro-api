@@ -48,12 +48,9 @@ export default class CollectionController extends CoreController {
         userId: result.user_id,
       };
     });
-    if (queryResults) {
-      this.httpCode = 200;
-      res.status(200).json(collections);
-    }
 
-    res.status(this.httpCode).end();
+    this.httpCode = 200;
+    res.status(200).json(collections);
   }
 
   public async getCollection(req: Request, res: Response): Promise<void> {
