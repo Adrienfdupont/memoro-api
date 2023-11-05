@@ -63,7 +63,7 @@ export default class SecurityHelper {
     const now = new Date();
 
     if (header.typ !== 'AWT' || expirationDate < now) {
-      throw new SecurityError(401, 'Invalid token.');
+      throw new SecurityError();
     }
 
     // Get the public key
@@ -79,7 +79,7 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, 'base64')) {
-      throw new SecurityError(401, 'Invalid token.');
+      throw new SecurityError();
     }
 
     // verify that the user still exists and didn't change the password
@@ -87,11 +87,7 @@ export default class SecurityHelper {
     const placeholders = [payload.userId];
     let sqlResult: any;
 
-    try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new SecurityError(500, 'Internal server error.');
-    }
+    sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
 
     if (sqlResult.length === 1) {
       const generationDate = new Date(payload.generationDate);
@@ -102,7 +98,7 @@ export default class SecurityHelper {
       }
     }
 
-    throw new SecurityError(401, 'Invalid token');
+    throw new SecurityError();
   }
 
   static async middleware(
