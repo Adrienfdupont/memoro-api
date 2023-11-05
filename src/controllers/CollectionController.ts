@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import Collection from '../types/Collection';
 import CoreController from './CoreController';
-import ConnectionHelper from "../helpers/ConnectionHelper";
-import { SqlError } from "mariadb";
+import ConnectionHelper from '../helpers/ConnectionHelper';
+import { SqlError } from 'mariadb';
 import BadRequestError from '../errors/BadRequestError';
 import ConflictError from '../errors/ConflictError';
 import NotFoundError from '../errors/NotFoundError';
@@ -19,7 +19,7 @@ export default class CollectionController extends CoreController {
       }
       const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
       const placeholders = [req.body.name, req.body.userId];
-  
+
       try {
         await ConnectionHelper.performQuery(sql, placeholders);
       } catch (err) {
@@ -36,7 +36,8 @@ export default class CollectionController extends CoreController {
   }
 
   public async getCollections(req: Request, res: Response): Promise<void> {
-    const sql = 'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
+    const sql =
+      'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
     const placeholders = [req.params.id];
     const queryResults: any = await ConnectionHelper.performQuery(sql, placeholders);
 
@@ -58,7 +59,7 @@ export default class CollectionController extends CoreController {
       const sql = 'SELECT * FROM collections WHERE id = ?';
       const placeholders = [req.params.id];
       const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-  
+
       if (queryResult.length === 0) {
         throw new NotFoundError();
       }

@@ -18,7 +18,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: process.env.ALLOW_ORIGIN,
-  })
+  }),
 );
 
 let userController: UserController;
@@ -42,9 +42,7 @@ app.use((req, res, next) => {
 
 app.get('/', async (req, res) => res.send('Momoro APi is workling.'));
 
-app.post('/user/register', async (req, res) =>
-  userController.register(req, res)
-);
+app.post('/user/register', async (req, res) => userController.register(req, res));
 app.post('/user/login', async (req, res) => userController.login(req, res));
 
 // routes that need authentication
@@ -53,34 +51,18 @@ app.use(SecurityHelper.middleware);
 
 app.get('/user/:id', async (req, res) => userController.getUser(req, res));
 app.put('/user', async (req, res) => userController.updateUser(req, res));
-app.post('/user/delete', async (req, res) =>
-  userController.removeUser(req, res)
-);
+app.post('/user/delete', async (req, res) => userController.removeUser(req, res));
 
 app.post('/card', async (req, res) => cardController.addCard(req, res));
-app.get('/card/collection/:id', async (req, res) =>
-  cardController.getCards(req, res)
-);
+app.get('/card/collection/:id', async (req, res) => cardController.getCards(req, res));
 app.get('/card/:id', async (req, res) => cardController.getCard(req, res));
 app.put('/card', async (req, res) => cardController.updateCard(req, res));
-app.delete('/card/:id', async (req, res) =>
-  cardController.removeCard(req, res)
-);
+app.delete('/card/:id', async (req, res) => cardController.removeCard(req, res));
 
-app.post('/collection', async (req, res) =>
-  collectionController.addCollection(req, res)
-);
-app.get('/collection/user/:id', async (req, res) =>
-  collectionController.getCollections(req, res)
-);
-app.get('/collection/:id', async (req, res) =>
-  collectionController.getCollection(req, res)
-);
-app.put('/collection', async (req, res) =>
-  collectionController.updateCollection(req, res)
-);
-app.delete('/collection/:id', async (req, res) =>
-  collectionController.removeCollection(req, res)
-);
+app.post('/collection', async (req, res) => collectionController.addCollection(req, res));
+app.get('/collection/user/:id', async (req, res) => collectionController.getCollections(req, res));
+app.get('/collection/:id', async (req, res) => collectionController.getCollection(req, res));
+app.put('/collection', async (req, res) => collectionController.updateCollection(req, res));
+app.delete('/collection/:id', async (req, res) => collectionController.removeCollection(req, res));
 
 app.listen(port, () => console.log(`Server started on port ${port}`));

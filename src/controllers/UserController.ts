@@ -25,7 +25,7 @@ export default class UserController extends CoreController {
       const sql = 'INSERT INTO users(name, password, last_password_change) VALUES(?, ?, ?)';
       const now = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
       const placeholders = [req.body.name, hashedPassword, now];
-  
+
       try {
         await ConnectionHelper.performQuery(sql, placeholders);
       } catch (err) {
@@ -33,7 +33,7 @@ export default class UserController extends CoreController {
           throw new ConflictError();
         }
       }
-  
+
       this.httpCode = 204;
     } catch (err: any) {
       this.httpCode = err.status ?? 500;
@@ -46,18 +46,21 @@ export default class UserController extends CoreController {
       if (req.body.name?.length === 0 || req.body.password?.length === 0) {
         throw new BadRequestError();
       }
-  
+
       const sql = 'SELECT * FROM users WHERE name = ?';
       const placeholders = [req.body.name];
       const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-  
-      if (queryResult?.length === 0 || !(await bcrypt.compare(req.body.password, queryResult[0].password))) {
+
+      if (
+        queryResult?.length === 0 ||
+        !(await bcrypt.compare(req.body.password, queryResult[0].password))
+      ) {
         throw new UnauthorizedError();
       }
 
-      const token = await SecurityHelper.generateToken(req.body.name, queryResult[0].id)
+      const token = await SecurityHelper.generateToken(req.body.name, queryResult[0].id);
       this.httpCode = 200;
-      res.status(this.httpCode).json({token: token})
+      res.status(this.httpCode).json({ token: token });
     } catch (err: any) {
       this.httpCode = err.status ?? 500;
       res.status(this.httpCode).end();
@@ -69,7 +72,7 @@ export default class UserController extends CoreController {
       const sql = 'SELECT * FROM users WHERE id = ?';
       const placeholders = [req.params.id];
       const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
-      
+
       if (queryResult?.length === 0) {
         throw new NotFoundError();
       }
@@ -79,7 +82,7 @@ export default class UserController extends CoreController {
         name: queryResult[0].name,
         password: undefined,
         lastPasswordChange: undefined,
-      }
+      };
 
       this.httpCode = 200;
       res.status(this.httpCode).json(user);
@@ -101,11 +104,11 @@ export default class UserController extends CoreController {
         name: req.body.newName ?? queryUsers[0].name,
         password: queryUsers[0].password,
         lastPasswordChange: queryUsers[0].last_password_change,
-      }
+      };
 
       if (
-        req.body.newPassword && !req.body.password ||
-        req.body.password && !(await bcrypt.compare(req.body.password, user.password))
+        (req.body.newPassword && !req.body.password) ||
+        (req.body.password && !(await bcrypt.compare(req.body.password, user.password)))
       ) {
         throw new UnauthorizedError();
       }
@@ -115,10 +118,11 @@ export default class UserController extends CoreController {
         user.lastPasswordChange = moment.parseZone(new Date()).format('YYYY-MM-DD HH:mm:ss');
         token = await SecurityHelper.generateToken(user.name, user.id);
       }
-      
-      const updateSql = 'UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?';
+
+      const updateSql =
+        'UPDATE users SET name = ?, password = ?, last_password_change = ? WHERE id = ?';
       const updatePlaceholders = [user.name, user.password, user.lastPasswordChange, user.id];
-      
+
       try {
         await ConnectionHelper.performQuery(updateSql, updatePlaceholders);
       } catch (err) {
@@ -126,7 +130,7 @@ export default class UserController extends CoreController {
           throw new ConflictError();
         }
       }
-      
+
       if (token) {
         this.httpCode = 200;
         res.status(this.httpCode).json({ token: token });
@@ -140,14 +144,16 @@ export default class UserController extends CoreController {
     }
   }
 
-
   public async removeUser(req: Request, res: Response): Promise<void> {
     try {
       const sql = 'SELECT * FROM users WHERE id = ?';
       const placeholders = [req.body.id];
       const queryUsers: any = await ConnectionHelper.performQuery(sql, placeholders);
-      
-      if (!req.body.password || !(await bcrypt.compare(req.body.password, queryUsers[0].password))) {
+
+      if (
+        !req.body.password ||
+        !(await bcrypt.compare(req.body.password, queryUsers[0].password))
+      ) {
         throw new UnauthorizedError();
       }
 
