@@ -4,10 +4,7 @@ import { NextFunction, Request, Response } from 'express';
 import SecurityError from '../errors/SecurityError';
 
 export default class SecurityHelper {
-  static async generateToken(
-    username: string,
-    userId: number
-  ): Promise<string> {
+  static async generateToken(username: string, userId: number): Promise<string> {
     // generate the header
     const header = JSON.stringify({
       alg: 'RSA-SHA256',
@@ -28,10 +25,9 @@ export default class SecurityHelper {
     });
 
     // cypher the payload
-    const privateKeyContent = Buffer.from(
-      process.env.PRIVATE_KEY ?? '',
-      'base64'
-    ).toString('utf-8');
+    const privateKeyContent = Buffer.from(process.env.PRIVATE_KEY ?? '', 'base64').toString(
+      'utf-8',
+    );
     const privateKey = crypto.createPrivateKey(privateKeyContent);
     const signer = crypto.createSign('RSA-SHA256');
     signer.write(payload);
@@ -51,26 +47,19 @@ export default class SecurityHelper {
     const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
 
     // verify token type and expiration date
-    const header = JSON.parse(
-      Buffer.from(encodedHeader, 'base64').toString('utf-8')
-    );
-    const stringPayload = Buffer.from(encodedPayload, 'base64').toString(
-      'utf-8'
-    );
+    const header = JSON.parse(Buffer.from(encodedHeader, 'base64').toString('utf-8'));
+    const stringPayload = Buffer.from(encodedPayload, 'base64').toString('utf-8');
     const payload = JSON.parse(stringPayload);
 
     const expirationDate = new Date(payload.expirationDate);
     const now = new Date();
 
     if (header.typ !== 'AWT' || expirationDate < now) {
-      throw new SecurityError(401, 'Invalid token.');
+      throw new SecurityError();
     }
 
     // Get the public key
-    const publicKeyContent = Buffer.from(
-      process.env.PUBLIC_KEY ?? '',
-      'base64'
-    ).toString('utf-8');
+    const publicKeyContent = Buffer.from(process.env.PUBLIC_KEY ?? '', 'base64').toString('utf-8');
     const publicKey = crypto.createPublicKey(publicKeyContent);
 
     // Verify the signature
@@ -79,7 +68,7 @@ export default class SecurityHelper {
     verifier.end();
 
     if (!verifier.verify(publicKey, encodedSignature, 'base64')) {
-      throw new SecurityError(401, 'Invalid token.');
+      throw new SecurityError();
     }
 
     // verify that the user still exists and didn't change the password
@@ -87,11 +76,7 @@ export default class SecurityHelper {
     const placeholders = [payload.userId];
     let sqlResult: any;
 
-    try {
-      sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
-    } catch (err) {
-      throw new SecurityError(500, 'Internal server error.');
-    }
+    sqlResult = await ConnectionHelper.performQuery(sql, placeholders);
 
     if (sqlResult.length === 1) {
       const generationDate = new Date(payload.generationDate);
@@ -102,14 +87,10 @@ export default class SecurityHelper {
       }
     }
 
-    throw new SecurityError(401, 'Invalid token');
+    throw new SecurityError();
   }
 
-  static async middleware(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  static async middleware(req: Request, res: Response, next: NextFunction): Promise<void> {
     let httpCode = 500;
     let body: Object = { error: 'Internal server error.' };
     const bearer = req.headers.authorization;

@@ -1,93 +1,108 @@
 import { Request, Response } from 'express';
-import CollectionBusiness from '../business/CollectionBusiness';
 import Collection from '../types/Collection';
 import CoreController from './CoreController';
-import BusinessError from '../errors/BusinessError';
+import ConnectionHelper from '../helpers/ConnectionHelper';
+import { SqlError } from 'mariadb';
+import BadRequestError from '../errors/BadRequestError';
+import ConflictError from '../errors/ConflictError';
+import NotFoundError from '../errors/NotFoundError';
 
 export default class CollectionController extends CoreController {
-  private collectionBusiness: CollectionBusiness;
-
   constructor() {
     super();
-    this.collectionBusiness = new CollectionBusiness();
   }
 
   public async addCollection(req: Request, res: Response): Promise<void> {
     try {
-      await this.collectionBusiness.addCollection(
-        req.body.name,
-        req.body.userId
-      );
-      this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
+      if (req.body.name.length === 0) {
+        throw new BadRequestError();
       }
-      res.status(this.httpCode).json(this.responseBody);
+      const sql = 'INSERT INTO collections (name, user_id) VALUES (?, ?)';
+      const placeholders = [req.body.name, req.body.userId];
+
+      try {
+        await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          throw new ConflictError();
+        }
+      }
+
+      this.httpCode = 204;
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
+    res.status(this.httpCode).end();
   }
 
   public async getCollections(req: Request, res: Response): Promise<void> {
-    let collections: Collection[];
-    try {
-      collections = await this.collectionBusiness.getCollections(req.params.id);
-      this.httpCode = 200;
-      this.responseBody = collections;
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
-      }
-    }
-    res.status(this.httpCode).json(this.responseBody);
+    const sql =
+      'SELECT c.* FROM collections c INNER JOIN users u ON c.user_id = u.id WHERE u.id = ?';
+    const placeholders = [req.params.id];
+    const queryResults: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+    const collections: Collection[] = queryResults.map((result: any) => {
+      return {
+        id: result.id,
+        name: result.name,
+        lastOpen: result.last_open,
+        userId: result.user_id,
+      };
+    });
+
+    this.httpCode = 200;
+    res.status(200).json(collections);
   }
 
   public async getCollection(req: Request, res: Response): Promise<void> {
-    let collection: Collection;
     try {
-      collection = await this.collectionBusiness.getCollection(req.params.id);
-      this.httpCode = 200;
-      this.responseBody = collection;
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
+      const sql = 'SELECT * FROM collections WHERE id = ?';
+      const placeholders = [req.params.id];
+      const queryResult: any = await ConnectionHelper.performQuery(sql, placeholders);
+
+      if (queryResult.length === 0) {
+        throw new NotFoundError();
       }
+
+      const collection: Collection = {
+        id: queryResult[0].id,
+        name: queryResult[0].name,
+        lastOpen: queryResult[0].last_open,
+        userId: queryResult[0].user_id,
+      };
+      res.status(200).json(collection);
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
+      res.status(this.httpCode).end();
     }
-    res.status(this.httpCode).json(this.responseBody);
   }
 
   public async updateCollection(req: Request, res: Response): Promise<void> {
     try {
-      await this.collectionBusiness.updateCollection(
-        req.body.id,
-        req.body.newName,
-        req.body.newLastOpen
-      );
-      this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
+      const sql = 'UPDATE collections SET name = ?, last_open = ? WHERE id = ?';
+      const placeholders = [req.body.newName, req.body.newLastOpen, req.body.id];
+
+      try {
+        await ConnectionHelper.performQuery(sql, placeholders);
+      } catch (err) {
+        if (err instanceof SqlError && err.errno === 1062) {
+          throw new ConflictError();
+        }
       }
-      res.status(this.httpCode).json(this.responseBody);
+
+      this.httpCode = 204;
+    } catch (err: any) {
+      this.httpCode = err.status ?? 500;
     }
+    res.status(this.httpCode).end();
   }
 
   public async removeCollection(req: Request, res: Response): Promise<void> {
-    try {
-      await this.collectionBusiness.removeCollection(req.params.id);
-      this.httpCode = 204;
-      res.status(this.httpCode).end();
-    } catch (err) {
-      if (err instanceof BusinessError) {
-        this.httpCode = err.status;
-        this.responseBody = { message: err.message };
-      }
-      res.status(this.httpCode).json(this.responseBody);
-    }
+    const sql = 'DELETE FROM collections WHERE id = ?';
+    const placeholders = [req.params.id];
+    await ConnectionHelper.performQuery(sql, placeholders);
+
+    this.httpCode = 204;
+    res.status(this.httpCode).end();
   }
 }
