@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import ConnectionHelper from './helpers/ConnectionHelper';
 import SecurityHelper from './helpers/SecurityHelper';
 import UserController from './controllers/UserController';
