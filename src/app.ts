@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import ConnectionHelper from './helpers/ConnectionHelper';
 import SecurityHelper from './helpers/SecurityHelper';
 import UserController from './controllers/UserController';
@@ -17,28 +16,13 @@ const port = process.env.PORT ?? 3000;
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.ALLOW_ORIGIN,
+    origin: new RegExp(process.env.ALLOW_ORIGIN ?? ''),
   }),
 );
 
-let userController: UserController;
-let collectionController: CollectionController;
-let cardController: CardController;
-
-app.use((req, res, next) => {
-  const entity = req.originalUrl.split('/')[1];
-
-  switch (entity) {
-    case 'user':
-      userController = new UserController();
-    case 'collection':
-      collectionController = new CollectionController();
-    case 'card':
-      cardController = new CardController();
-  }
-
-  next();
-});
+const userController = new UserController();
+const collectionController = new CollectionController();
+const cardController = new CardController();
 
 app.get('/', async (req, res) => res.send('Momoro APi is workling.'));
 
